@@ -5,10 +5,86 @@ const form = document.querySelector('.todo-form')
 const input = document.querySelector('.todo-input')
 const listEl = document.querySelector('.todo-list')
 
+const authSignedIn = document.getElementById('auth-signed-in')
+const authEmail = document.getElementById('auth-email')
+const authSignOut = document.getElementById('auth-sign-out')
+const authFormContainer = document.getElementById('auth-form-container')
+const authSigninForm = document.getElementById('auth-signin-form')
+const authSignupForm = document.getElementById('auth-signup-form')
+const authSigninEmail = document.getElementById('auth-signin-email')
+const authSigninPassword = document.getElementById('auth-signin-password')
+const authSignupEmail = document.getElementById('auth-signup-email')
+const authSignupPassword = document.getElementById('auth-signup-password')
+const authMessage = document.getElementById('auth-message')
+const authTabs = document.querySelectorAll('.auth-tab')
+const todoErrorEl = document.getElementById('todo-error')
+
 let todos = []
+let currentUser = null
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  currentUser = session?.user ?? null
+  updateAuthUI()
+})
+
+function updateAuthUI() {
+  const isEmailUser = currentUser && !currentUser.is_anonymous
+  if (isEmailUser) {
+    authSignedIn.hidden = false
+    authFormContainer.hidden = true
+    authEmail.textContent = currentUser.email ?? ''
+  } else {
+    authSignedIn.hidden = true
+    authFormContainer.hidden = false
+  }
+  authMessage.hidden = true
+  authMessage.textContent = ''
+}
+
+function setAuthMessage(msg, isError = false) {
+  authMessage.textContent = msg
+  authMessage.hidden = false
+  authMessage.style.color = isError ? '#e57373' : undefined
+}
+
+function showTodoError(msg) {
+  if (todoErrorEl) {
+    todoErrorEl.textContent = msg
+    todoErrorEl.hidden = false
+    todoErrorEl.style.color = '#e57373'
+  }
+}
+
+function clearTodoError() {
+  if (todoErrorEl) {
+    todoErrorEl.textContent = ''
+    todoErrorEl.hidden = true
+  }
+}
+
+async function ensureSession() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (session?.user) {
+    currentUser = session.user
+    return
+  }
+  const { data, error } = await supabase.auth.signInAnonymously()
+  if (error) {
+    console.error('Anonymous sign-in failed:', error)
+    throw error
+  }
+  currentUser = data.user
+}
 
 async function loadTodos() {
-  const { data, error } = await supabase.from('todos').select('id, todo_text:text, completed, created_at').order('created_at', { ascending: true })
+  if (!currentUser) return
+  const { data, error } = await supabase
+    .from('todos')
+    .select('id, todo_text:text, completed, created_at')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: true })
   if (error) {
     console.error('Failed to load todos:', error)
     return
@@ -19,11 +95,25 @@ async function loadTodos() {
 
 async function addTodo(text) {
   if (!text.trim()) return
-  const { error } = await supabase.from('todos').insert({ text: text.trim(), completed: false })
-  if (error) {
-    console.error('Failed to add todo:', error)
+  await supabase.auth.refreshSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user
+  if (!user) {
+    showTodoError('You must be signed in to add todos.')
     return
   }
+  const { error } = await supabase
+    .from('todos')
+    .insert({ text: text.trim(), completed: false, user_id: user.id })
+  if (error) {
+    console.error('Failed to add todo:', error)
+    showTodoError(error.message)
+    return
+  }
+  clearTodoError()
+  currentUser = user
   await loadTodos()
 }
 
@@ -80,6 +170,7 @@ function renderTodos() {
 
 form.addEventListener('submit', (e) => {
   e.preventDefault()
+  clearTodoError()
   addTodo(input.value)
   input.value = ''
   input.focus()
@@ -99,4 +190,74 @@ listEl.addEventListener('click', (e) => {
   }
 })
 
-loadTodos()
+authTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const t = tab.dataset.tab
+    authTabs.forEach((x) => x.classList.toggle('auth-tab--active', x.dataset.tab === t))
+    authSigninForm.classList.toggle('auth-form--hidden', t !== 'signin')
+    authSignupForm.classList.toggle('auth-form--hidden', t !== 'signup')
+    authMessage.hidden = true
+  })
+})
+
+authSigninForm.addEventListener('submit', async (e) => {
+  e.preventDefault()
+  setAuthMessage('')
+  const email = authSigninEmail.value.trim()
+  const password = authSigninPassword.value
+  if (!email || !password) {
+    setAuthMessage('Enter email and password.', true)
+    return
+  }
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) {
+    setAuthMessage(error.message ?? 'Sign in failed.', true)
+    return
+  }
+  currentUser = data.user
+  updateAuthUI()
+  await loadTodos()
+  authSigninPassword.value = ''
+})
+
+authSignupForm.addEventListener('submit', async (e) => {
+  e.preventDefault()
+  setAuthMessage('')
+  const email = authSignupEmail.value.trim()
+  const password = authSignupPassword.value
+  if (!email || !password) {
+    setAuthMessage('Enter email and password.', true)
+    return
+  }
+  if (password.length < 6) {
+    setAuthMessage('Password must be at least 6 characters.', true)
+    return
+  }
+  const { data, error } = await supabase.auth.signUp({ email, password })
+  if (error) {
+    setAuthMessage(error.message ?? 'Sign up failed.', true)
+    return
+  }
+  currentUser = data.user
+  updateAuthUI()
+  await loadTodos()
+  authSignupPassword.value = ''
+  setAuthMessage('Account created. You are signed in.')
+})
+
+authSignOut.addEventListener('click', async () => {
+  await supabase.auth.signOut()
+  await ensureSession()
+  updateAuthUI()
+  await loadTodos()
+})
+
+;(async () => {
+  try {
+    await ensureSession()
+    updateAuthUI()
+    await loadTodos()
+  } catch (err) {
+    console.error('App init failed:', err)
+  }
+})()

@@ -10,11 +10,34 @@
     <div id="app">
       <header class="todo-header">
         <h1 class="todo-title">Todo List</h1>
+        <div id="auth-signed-in" class="auth-signed-in" hidden>
+          <span id="auth-email" class="auth-email"></span>
+          <button type="button" id="auth-sign-out" class="auth-sign-out">Sign out</button>
+        </div>
+        <div id="auth-form-container" class="auth-form-container">
+          <p class="auth-form-intro">Create an account or sign in to sync your todos.</p>
+          <div class="auth-tabs">
+            <button type="button" class="auth-tab auth-tab--active" data-tab="signin">Sign in</button>
+            <button type="button" class="auth-tab" data-tab="signup">Create account</button>
+          </div>
+          <form id="auth-signin-form" class="auth-form" aria-label="Sign in">
+            <input type="email" id="auth-signin-email" class="todo-input auth-input" placeholder="Email" required autocomplete="email" />
+            <input type="password" id="auth-signin-password" class="todo-input auth-input" placeholder="Password" autocomplete="current-password" />
+            <button type="submit" class="todo-add-button">Sign in</button>
+          </form>
+          <form id="auth-signup-form" class="auth-form auth-form--hidden" aria-label="Create account">
+            <input type="email" id="auth-signup-email" class="todo-input auth-input" placeholder="Email" required autocomplete="email" />
+            <input type="password" id="auth-signup-password" class="todo-input auth-input" placeholder="Password" minlength="6" autocomplete="new-password" />
+            <button type="submit" class="todo-add-button">Create account</button>
+          </form>
+          <p id="auth-message" class="auth-message" role="alert" hidden></p>
+        </div>
       </header>
       <form class="todo-form" action="#" aria-label="Add todo">
         <input type="text" class="todo-input" name="todo" placeholder="What needs to be done?" autocomplete="off" />
         <button type="submit" class="todo-add-button">Add</button>
       </form>
+      <p id="todo-error" class="auth-message" role="alert" hidden></p>
       <ul class="todo-list" aria-label="Todo items"></ul>
     </div>
     <script type="module" src="/src/main.js"></script>
