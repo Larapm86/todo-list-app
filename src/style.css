@@ -28,6 +28,12 @@
 
   /* Colors */
   --color-text-muted: rgba(255, 255, 255, 0.5);
+
+  /* Category pill colors */
+  --category-general: rgba(255, 255, 255, 0.15);
+  --category-work: rgba(100, 108, 255, 0.35);
+  --category-personal: rgba(72, 187, 120, 0.35);
+  --category-errands: rgba(245, 158, 11, 0.35);
 }
 
 a {
@@ -191,6 +197,51 @@ h1 {
   white-space: nowrap;
 }
 
+.todo-category-select {
+  flex-shrink: 0;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  color: inherit;
+  min-width: 5rem;
+}
+
+.todo-category-select:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+.todo-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.todo-filter {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.875rem;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.todo-filter:hover {
+  opacity: 1;
+}
+
+.todo-filter--active {
+  border-color: #646cff;
+  color: #646cff;
+  opacity: 1;
+}
+
 .todo-list {
   list-style: none;
   margin: 0;
@@ -235,6 +286,31 @@ h1 {
 .todo-item--completed .todo-item__text {
   color: var(--color-text-muted);
   text-decoration: line-through;
+}
+
+.todo-item__category {
+  flex-shrink: 0;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.todo-item__category--general {
+  background: var(--category-general);
+}
+
+.todo-item__category--work {
+  background: var(--category-work);
+}
+
+.todo-item__category--personal {
+  background: var(--category-personal);
+}
+
+.todo-item__category--errands {
+  background: var(--category-errands);
 }
 
 .todo-item__delete {
@@ -308,6 +384,9 @@ button:focus-visible {
   }
   .todo-input::placeholder {
     color: rgba(0, 0, 0, 0.45);
+  }
+  .todo-category-select {
+    background-color: #f5f5f5;
   }
   .todo-item {
     background-color: #f5f5f5;

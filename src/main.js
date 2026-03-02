@@ -19,9 +19,14 @@ const authMessage = document.getElementById('auth-message')
 const authFormIntro = document.querySelector('.auth-form-intro')
 const authTabs = document.querySelectorAll('.auth-tab')
 const todoErrorEl = document.getElementById('todo-error')
+const todoCategorySelect = document.getElementById('todo-category')
+const todoFilterButtons = document.querySelectorAll('.todo-filter')
+
+const CATEGORY_LABELS = { general: 'General', work: 'Work', personal: 'Personal', errands: 'Errands' }
 
 let todos = []
 let currentUser = null
+let categoryFilter = ''
 
 if (supabase) {
   supabase.auth.onAuthStateChange((_event, session) => {
@@ -91,7 +96,7 @@ async function loadTodos() {
   if (!currentUser || !supabase) return
   const { data, error } = await supabase
     .from('todos')
-    .select('id, todo_text:text, completed, created_at')
+    .select('id, todo_text:text, completed, created_at, category')
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: true })
   if (error) {
@@ -103,17 +108,19 @@ async function loadTodos() {
     text: typeof row.todo_text === 'string' ? row.todo_text : (typeof row.text === 'string' ? row.text : ''),
     completed: Boolean(row.completed),
     created_at: row.created_at,
+    category: typeof row.category === 'string' ? row.category : 'general',
   }))
   renderTodos()
 }
 
-async function addTodo(taskText) {
+async function addTodo(taskText, category = 'general') {
   const trimmed = typeof taskText === 'string' ? taskText.trim() : ''
   if (!trimmed) return
   if (!supabase) {
     showTodoError('Sign in is not configured.')
     return
   }
+  const cat = typeof category === 'string' && category ? category : 'general'
   await supabase.auth.refreshSession()
   const {
     data: { session },
@@ -125,8 +132,8 @@ async function addTodo(taskText) {
   }
   const { data: inserted, error } = await supabase
     .from('todos')
-    .insert({ text: trimmed, completed: false, user_id: user.id })
-    .select('id, todo_text:text, completed, created_at')
+    .insert({ text: trimmed, completed: false, user_id: user.id, category: cat })
+    .select('id, todo_text:text, completed, created_at, category')
     .single()
   if (error) {
     console.error('Failed to add todo:', error)
@@ -141,6 +148,7 @@ async function addTodo(taskText) {
       text: typeof inserted.todo_text === 'string' ? inserted.todo_text : (typeof inserted.text === 'string' ? inserted.text : trimmed),
       completed: Boolean(inserted.completed),
       created_at: inserted.created_at,
+      category: typeof inserted.category === 'string' ? inserted.category : 'general',
     })
     renderTodos()
   } else {
@@ -174,8 +182,11 @@ async function deleteTodo(id) {
 }
 
 function renderTodos() {
+  const toShow = categoryFilter
+    ? todos.filter((t) => (t.category || 'general') === categoryFilter)
+    : todos
   listEl.innerHTML = ''
-  for (const todo of todos) {
+  for (const todo of toShow) {
     const li = document.createElement('li')
     li.className = 'todo-item' + (todo.completed ? ' todo-item--completed' : '')
     li.dataset.todoId = todo.id
@@ -191,13 +202,19 @@ function renderTodos() {
     const label = typeof todo.text === 'string' ? todo.text : (todo.todo_text != null ? String(todo.todo_text) : '')
     textEl.textContent = label
 
+    const cat = todo.category || 'general'
+    const pill = document.createElement('span')
+    pill.className = 'todo-item__category todo-item__category--' + cat
+    pill.setAttribute('aria-label', 'Category: ' + (CATEGORY_LABELS[cat] || cat))
+    pill.textContent = CATEGORY_LABELS[cat] || cat
+
     const deleteBtn = document.createElement('button')
     deleteBtn.type = 'button'
     deleteBtn.className = 'todo-item__delete'
     deleteBtn.setAttribute('aria-label', 'Delete')
     deleteBtn.textContent = 'Delete'
 
-    li.append(checkbox, textEl, deleteBtn)
+    li.append(checkbox, textEl, pill, deleteBtn)
     listEl.appendChild(li)
   }
 }
@@ -206,9 +223,21 @@ form.addEventListener('submit', (e) => {
   e.preventDefault()
   clearTodoError()
   const value = input.value
+  const category = todoCategorySelect ? todoCategorySelect.value : 'general'
   input.value = ''
   input.focus()
-  addTodo(value)
+  addTodo(value, category)
+})
+
+todoFilterButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    categoryFilter = btn.dataset.category ?? ''
+    todoFilterButtons.forEach((b) => {
+      const bCat = b.dataset.category ?? ''
+      b.classList.toggle('todo-filter--active', (categoryFilter === '' && bCat === '') || (categoryFilter !== '' && bCat === categoryFilter))
+    })
+    renderTodos()
+  })
 })
 
 listEl.addEventListener('change', (e) => {
