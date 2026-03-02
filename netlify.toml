@@ -1,0 +1,10 @@
+# Build this Vite app and publish the output
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA: serve index.html for all routes (required for client-side routing if you add it later)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
