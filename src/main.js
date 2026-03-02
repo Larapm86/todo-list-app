@@ -1,5 +1,5 @@
 import './style.css'
-import { supabase } from './supabase.js'
+import { supabase, hasSupabase } from './supabase.js'
 
 const form = document.querySelector('.todo-form')
 const input = document.querySelector('.todo-input')
@@ -16,18 +16,26 @@ const authSigninPassword = document.getElementById('auth-signin-password')
 const authSignupEmail = document.getElementById('auth-signup-email')
 const authSignupPassword = document.getElementById('auth-signup-password')
 const authMessage = document.getElementById('auth-message')
+const authFormIntro = document.querySelector('.auth-form-intro')
 const authTabs = document.querySelectorAll('.auth-tab')
 const todoErrorEl = document.getElementById('todo-error')
 
 let todos = []
 let currentUser = null
 
-supabase.auth.onAuthStateChange((_event, session) => {
-  currentUser = session?.user ?? null
-  updateAuthUI()
-})
+if (supabase) {
+  supabase.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user ?? null
+    updateAuthUI()
+  })
+}
 
 function updateAuthUI() {
+  if (!hasSupabase() && authFormIntro) {
+    authFormIntro.textContent =
+      'Sign in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment environment (e.g. Netlify env vars) and redeploy.'
+    authFormIntro.style.color = '#e57373'
+  }
   const isEmailUser = currentUser && !currentUser.is_anonymous
   if (isEmailUser) {
     authSignedIn.hidden = false
@@ -63,6 +71,7 @@ function clearTodoError() {
 }
 
 async function ensureSession() {
+  if (!supabase) return
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -79,22 +88,32 @@ async function ensureSession() {
 }
 
 async function loadTodos() {
-  if (!currentUser) return
+  if (!currentUser || !supabase) return
   const { data, error } = await supabase
     .from('todos')
-    .select('id, todo_text:text, completed, created_at')
+    .select('id, text, completed, created_at')
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: true })
   if (error) {
     console.error('Failed to load todos:', error)
     return
   }
-  todos = (data ?? []).map((row) => ({ ...row, text: row.todo_text ?? row.text ?? '' }))
+  todos = (data ?? []).map((row) => ({
+    id: row.id,
+    text: typeof row.text === 'string' ? row.text : '',
+    completed: Boolean(row.completed),
+    created_at: row.created_at,
+  }))
   renderTodos()
 }
 
-async function addTodo(text) {
-  if (!text.trim()) return
+async function addTodo(taskText) {
+  const trimmed = typeof taskText === 'string' ? taskText.trim() : ''
+  if (!trimmed) return
+  if (!supabase) {
+    showTodoError('Sign in is not configured.')
+    return
+  }
   await supabase.auth.refreshSession()
   const {
     data: { session },
@@ -106,7 +125,7 @@ async function addTodo(text) {
   }
   const { error } = await supabase
     .from('todos')
-    .insert({ text: text.trim(), completed: false, user_id: user.id })
+    .insert({ text: trimmed, completed: false, user_id: user.id })
   if (error) {
     console.error('Failed to add todo:', error)
     showTodoError(error.message)
@@ -118,6 +137,7 @@ async function addTodo(text) {
 }
 
 async function toggleTodo(id) {
+  if (!supabase) return
   const todo = todos.find((t) => t.id === id)
   if (!todo) return
   const completed = !todo.completed
@@ -131,6 +151,7 @@ async function toggleTodo(id) {
 }
 
 async function deleteTodo(id) {
+  if (!supabase) return
   const { error } = await supabase.from('todos').delete().eq('id', id)
   if (error) {
     console.error('Failed to delete todo:', error)
@@ -155,7 +176,8 @@ function renderTodos() {
 
     const textEl = document.createElement('span')
     textEl.className = 'todo-item__text'
-    textEl.textContent = (todo.text ?? todo.todo_text ?? '').toString()
+    const label = typeof todo.text === 'string' ? todo.text : ''
+    textEl.textContent = label
 
     const deleteBtn = document.createElement('button')
     deleteBtn.type = 'button'
@@ -171,9 +193,10 @@ function renderTodos() {
 form.addEventListener('submit', (e) => {
   e.preventDefault()
   clearTodoError()
-  addTodo(input.value)
+  const value = input.value
   input.value = ''
   input.focus()
+  addTodo(value)
 })
 
 listEl.addEventListener('change', (e) => {
@@ -203,6 +226,10 @@ authTabs.forEach((tab) => {
 authSigninForm.addEventListener('submit', async (e) => {
   e.preventDefault()
   setAuthMessage('')
+  if (!supabase) {
+    setAuthMessage('Sign in is not configured. Set env vars and redeploy.', true)
+    return
+  }
   const email = authSigninEmail.value.trim()
   const password = authSigninPassword.value
   if (!email || !password) {
@@ -223,6 +250,10 @@ authSigninForm.addEventListener('submit', async (e) => {
 authSignupForm.addEventListener('submit', async (e) => {
   e.preventDefault()
   setAuthMessage('')
+  if (!supabase) {
+    setAuthMessage('Sign in is not configured. Set env vars and redeploy.', true)
+    return
+  }
   const email = authSignupEmail.value.trim()
   const password = authSignupPassword.value
   if (!email || !password) {
@@ -246,6 +277,7 @@ authSignupForm.addEventListener('submit', async (e) => {
 })
 
 authSignOut.addEventListener('click', async () => {
+  if (!supabase) return
   await supabase.auth.signOut()
   await ensureSession()
   updateAuthUI()
@@ -254,9 +286,12 @@ authSignOut.addEventListener('click', async () => {
 
 ;(async () => {
   try {
-    await ensureSession()
     updateAuthUI()
-    await loadTodos()
+    if (supabase) {
+      await ensureSession()
+      updateAuthUI()
+      await loadTodos()
+    }
   } catch (err) {
     console.error('App init failed:', err)
   }
