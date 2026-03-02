@@ -2,7 +2,7 @@ import './style.css'
 import { supabase, hasSupabase } from './supabase.js'
 
 const form = document.querySelector('.todo-form')
-const input = document.querySelector('.todo-input')
+const input = document.getElementById('todo-input')
 const listEl = document.querySelector('.todo-list')
 
 const authSignedIn = document.getElementById('auth-signed-in')
@@ -91,7 +91,7 @@ async function loadTodos() {
   if (!currentUser || !supabase) return
   const { data, error } = await supabase
     .from('todos')
-    .select('id, text, completed, created_at')
+    .select('id, todo_text:text, completed, created_at')
     .eq('user_id', currentUser.id)
     .order('created_at', { ascending: true })
   if (error) {
@@ -100,7 +100,7 @@ async function loadTodos() {
   }
   todos = (data ?? []).map((row) => ({
     id: row.id,
-    text: typeof row.text === 'string' ? row.text : '',
+    text: typeof row.todo_text === 'string' ? row.todo_text : (typeof row.text === 'string' ? row.text : ''),
     completed: Boolean(row.completed),
     created_at: row.created_at,
   }))
@@ -123,9 +123,11 @@ async function addTodo(taskText) {
     showTodoError('You must be signed in to add todos.')
     return
   }
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from('todos')
     .insert({ text: trimmed, completed: false, user_id: user.id })
+    .select('id, todo_text:text, completed, created_at')
+    .single()
   if (error) {
     console.error('Failed to add todo:', error)
     showTodoError(error.message)
@@ -133,7 +135,17 @@ async function addTodo(taskText) {
   }
   clearTodoError()
   currentUser = user
-  await loadTodos()
+  if (inserted) {
+    todos.push({
+      id: inserted.id,
+      text: typeof inserted.todo_text === 'string' ? inserted.todo_text : (typeof inserted.text === 'string' ? inserted.text : trimmed),
+      completed: Boolean(inserted.completed),
+      created_at: inserted.created_at,
+    })
+    renderTodos()
+  } else {
+    await loadTodos()
+  }
 }
 
 async function toggleTodo(id) {
@@ -176,7 +188,7 @@ function renderTodos() {
 
     const textEl = document.createElement('span')
     textEl.className = 'todo-item__text'
-    const label = typeof todo.text === 'string' ? todo.text : ''
+    const label = typeof todo.text === 'string' ? todo.text : (todo.todo_text != null ? String(todo.todo_text) : '')
     textEl.textContent = label
 
     const deleteBtn = document.createElement('button')
