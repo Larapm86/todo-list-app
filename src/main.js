@@ -1,27 +1,51 @@
 import './style.css'
+import { supabase } from './supabase.js'
 
 const form = document.querySelector('.todo-form')
 const input = document.querySelector('.todo-input')
 const listEl = document.querySelector('.todo-list')
 
 let todos = []
-let nextId = 1
 
-function addTodo(text) {
-  if (!text.trim()) return
-  todos.push({ id: nextId++, text: text.trim(), completed: false })
+async function loadTodos() {
+  const { data, error } = await supabase.from('todos').select('id, todo_text:text, completed, created_at').order('created_at', { ascending: true })
+  if (error) {
+    console.error('Failed to load todos:', error)
+    return
+  }
+  todos = (data ?? []).map((row) => ({ ...row, text: row.todo_text ?? row.text ?? '' }))
   renderTodos()
 }
 
-function toggleTodo(id) {
-  const todo = todos.find((t) => t.id === id)
-  if (todo) {
-    todo.completed = !todo.completed
-    renderTodos()
+async function addTodo(text) {
+  if (!text.trim()) return
+  const { error } = await supabase.from('todos').insert({ text: text.trim(), completed: false })
+  if (error) {
+    console.error('Failed to add todo:', error)
+    return
   }
+  await loadTodos()
 }
 
-function deleteTodo(id) {
+async function toggleTodo(id) {
+  const todo = todos.find((t) => t.id === id)
+  if (!todo) return
+  const completed = !todo.completed
+  const { error } = await supabase.from('todos').update({ completed }).eq('id', id)
+  if (error) {
+    console.error('Failed to toggle todo:', error)
+    return
+  }
+  todo.completed = completed
+  renderTodos()
+}
+
+async function deleteTodo(id) {
+  const { error } = await supabase.from('todos').delete().eq('id', id)
+  if (error) {
+    console.error('Failed to delete todo:', error)
+    return
+  }
   todos = todos.filter((t) => t.id !== id)
   renderTodos()
 }
@@ -39,9 +63,9 @@ function renderTodos() {
     checkbox.checked = todo.completed
     checkbox.setAttribute('aria-label', 'Mark as ' + (todo.completed ? 'incomplete' : 'complete'))
 
-    const text = document.createElement('span')
-    text.className = 'todo-item__text'
-    text.textContent = todo.text
+    const textEl = document.createElement('span')
+    textEl.className = 'todo-item__text'
+    textEl.textContent = (todo.text ?? todo.todo_text ?? '').toString()
 
     const deleteBtn = document.createElement('button')
     deleteBtn.type = 'button'
@@ -49,7 +73,7 @@ function renderTodos() {
     deleteBtn.setAttribute('aria-label', 'Delete')
     deleteBtn.textContent = 'Delete'
 
-    li.append(checkbox, text, deleteBtn)
+    li.append(checkbox, textEl, deleteBtn)
     listEl.appendChild(li)
   }
 }
@@ -63,14 +87,16 @@ form.addEventListener('submit', (e) => {
 
 listEl.addEventListener('change', (e) => {
   if (e.target.matches('.todo-item__checkbox')) {
-    const id = Number(e.target.closest('.todo-item').dataset.todoId)
+    const id = e.target.closest('.todo-item').dataset.todoId
     toggleTodo(id)
   }
 })
 
 listEl.addEventListener('click', (e) => {
   if (e.target.matches('.todo-item__delete')) {
-    const id = Number(e.target.closest('.todo-item').dataset.todoId)
+    const id = e.target.closest('.todo-item').dataset.todoId
     deleteTodo(id)
   }
 })
+
+loadTodos()
