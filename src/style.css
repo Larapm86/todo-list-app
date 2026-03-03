@@ -1532,6 +1532,28 @@ html[data-theme="light"] .chip:focus-visible {
   box-shadow: var(--focus-ring-light);
 }
 
+/* Light theme: selected chip must use category colors (override base .chip so active state wins) */
+html[data-theme="light"] .chip[data-category="general"].chip--active {
+  background: color-mix(in srgb, #e2e6ed 35%, #64748b);
+  color: #fff;
+  border-color: #64748b;
+}
+html[data-theme="light"] .chip[data-category="work"].chip--active {
+  background: color-mix(in srgb, #e2e6ed 35%, #2383e2);
+  color: #fff;
+  border-color: #2383e2;
+}
+html[data-theme="light"] .chip[data-category="personal"].chip--active {
+  background: color-mix(in srgb, #e2e6ed 35%, #0f7b6c);
+  color: #fff;
+  border-color: #0f7b6c;
+}
+html[data-theme="light"] .chip[data-category="errands"].chip--active {
+  background: color-mix(in srgb, #e2e6ed 30%, #c4901e);
+  color: #fff;
+  border-color: #c4901e;
+}
+
 /* Category chip active state – one color per category */
 .chip[data-category="general"].chip--active {
   border-color: var(--category-general);
@@ -2025,6 +2047,46 @@ html[data-theme="light"] .filter-btn:focus-visible {
 .app--party .empty-state .empty-state__party:hover {
   color: #1a1a1a;
   background: rgba(0, 0, 0, 0.08);
+}
+
+/* Party mode: todo form and input show disco colors (semi-transparent so overlay shows through) */
+.app--party .add-block {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.25);
+  animation: party-glow 3s ease-in-out;
+}
+.app--party .add-form__label {
+  color: #1a1a1a;
+}
+.app--party .add-form__input {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #1a1a1a;
+}
+.app--party .add-form__input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+.app--party .add-form__input:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.2);
+}
+.app--party .add-form__submit {
+  background: rgba(91, 33, 182, 0.9);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Light theme + party: ensure input uses party colors (light theme .add-form__input would otherwise override) */
+html[data-theme="light"] .app--party .add-form__input {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #1a1a1a;
+}
+html[data-theme="light"] .app--party .add-form__input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+html[data-theme="light"] .app--party .add-form__input:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 @keyframes party-glow {
@@ -2554,6 +2616,19 @@ button {
   html:not([data-theme]) .add-form__input::placeholder {
     color: rgba(0, 0, 0, 0.45);
   }
+  /* System light + party: input uses party colors so disco shows through */
+  html:not([data-theme]) .app--party .add-form__input {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #1a1a1a;
+  }
+  html:not([data-theme]) .app--party .add-form__input::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+  }
+  html:not([data-theme]) .app--party .add-form__input:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+  }
   html:not([data-theme]) .auth-modal__content {
     background: #f5f5f5;
     border-color: rgba(0, 0, 0, 0.08);
@@ -2678,6 +2753,26 @@ button {
   }
   html:not([data-theme]) .chip:focus-visible {
     box-shadow: var(--focus-ring-light);
+  }
+  html:not([data-theme]) .chip[data-category="general"].chip--active {
+    background: color-mix(in srgb, #e2e6ed 35%, #64748b);
+    color: #fff;
+    border-color: #64748b;
+  }
+  html:not([data-theme]) .chip[data-category="work"].chip--active {
+    background: color-mix(in srgb, #e2e6ed 35%, #2383e2);
+    color: #fff;
+    border-color: #2383e2;
+  }
+  html:not([data-theme]) .chip[data-category="personal"].chip--active {
+    background: color-mix(in srgb, #e2e6ed 35%, #0f7b6c);
+    color: #fff;
+    border-color: #0f7b6c;
+  }
+  html:not([data-theme]) .chip[data-category="errands"].chip--active {
+    background: color-mix(in srgb, #e2e6ed 30%, #c4901e);
+    color: #fff;
+    border-color: #c4901e;
   }
   html:not([data-theme]) .filter-btn {
     color: var(--color-text-muted);
