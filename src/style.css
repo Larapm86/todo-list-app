@@ -435,6 +435,69 @@ html[data-theme="light"] .theme-toggle__option:hover {
   box-shadow: var(--focus-ring);
 }
 
+/* Auth tooltip – points to Sign in / Get started after adding a todo anonymously */
+.auth-tooltip {
+  position: fixed;
+  z-index: 20;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 15rem;
+  padding: var(--space-md) var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  animation: authTooltipIn 0.2s ease-out;
+}
+
+.auth-tooltip[hidden] {
+  display: none;
+}
+
+.auth-tooltip__arrow {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -100%);
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  border-bottom-color: var(--border-default);
+  border-top: none;
+}
+
+.auth-tooltip__arrow::after {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 2px;
+  width: 0;
+  height: 0;
+  border: 7px solid transparent;
+  border-bottom-color: var(--bg-elevated);
+  border-top: none;
+}
+
+.auth-tooltip__text {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-text-primary);
+  white-space: normal;
+  text-align: center;
+}
+
+@keyframes authTooltipIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 /* Auth modal – fixed size so Sign in and Get started match */
 .auth-modal {
   border: none;

@@ -26,6 +26,9 @@ const authModalTitle = document.getElementById('auth-modal-title')
 const authModalHint = document.getElementById('auth-modal-hint')
 const authSwitchToSignup = document.getElementById('auth-switch-to-signup')
 const authSwitchToSignin = document.getElementById('auth-switch-to-signin')
+const authTooltip = document.getElementById('auth-tooltip')
+let authTooltipHideTimeout = null
+let authTooltipDismissListener = null
 const todoErrorEl = document.getElementById('todo-error')
 const todoEmptyEl = document.getElementById('todo-empty')
 const todoAddBtn = document.getElementById('todo-add-btn')
@@ -147,7 +150,43 @@ if (supabase) {
   })
 }
 
+function hideAuthTooltip() {
+  if (authTooltip) {
+    authTooltip.setAttribute('hidden', '')
+    authTooltip.style.display = ''
+  }
+  if (authTooltipHideTimeout) {
+    clearTimeout(authTooltipHideTimeout)
+    authTooltipHideTimeout = null
+  }
+  if (authTooltipDismissListener) {
+    document.removeEventListener('click', authTooltipDismissListener)
+    authTooltipDismissListener = null
+  }
+}
+
+function showAuthTooltip() {
+  if (!authCta || !authTooltip) return
+  hideAuthTooltip()
+  requestAnimationFrame(() => {
+    if (!authCta || !authTooltip) return
+    const rect = authCta.getBoundingClientRect()
+    authTooltip.style.left = (rect.left + rect.width / 2 - 28) + 'px'
+    authTooltip.style.top = rect.bottom + 8 + 'px'
+    authTooltip.style.display = 'block'
+    authTooltip.removeAttribute('hidden')
+    authTooltipHideTimeout = setTimeout(hideAuthTooltip, 8000)
+    authTooltipDismissListener = (e) => {
+      if (authTooltip?.hasAttribute('hidden')) return
+      if (authTooltip?.contains(e.target) || authCta?.contains(e.target)) return
+      hideAuthTooltip()
+    }
+    setTimeout(() => document.addEventListener('click', authTooltipDismissListener), 0)
+  })
+}
+
 function updateAuthUI() {
+  hideAuthTooltip()
   if (!hasSupabase() && authCtaMessage) {
     authCtaMessage.textContent = 'Sign in is not configured. Set env vars and redeploy.'
     authCtaMessage.style.color = '#e57373'
@@ -194,6 +233,7 @@ function setAuthView(tab) {
 }
 
 function openAuthModal(tab = 'signin') {
+  hideAuthTooltip()
   setAuthView(tab)
   authModal?.showModal()
 }
@@ -290,9 +330,20 @@ async function addTodo(taskText, category = 'general') {
     data: { session },
   } = await supabase.auth.getSession()
   const user = session?.user
-  if (!user) {
+  const isAnonymous = !user || user.is_anonymous
+  if (isAnonymous) {
     setAddLoading(false)
-    showTodoError('You must be signed in to add todos.')
+    const localId = 'local-' + Date.now()
+    const newTodo = {
+      id: localId,
+      text: trimmed,
+      completed: false,
+      created_at: new Date().toISOString(),
+      category: cat,
+    }
+    todos.push(newTodo)
+    renderTodos(true, newTodo.id)
+    showAuthTooltip()
     return
   }
   const { data: inserted, error } = await supabase
@@ -323,11 +374,26 @@ async function addTodo(taskText, category = 'general') {
   }
 }
 
+function isLocalTodoId(id) {
+  return typeof id === 'string' && id.startsWith('local-')
+}
+
 async function toggleTodo(id) {
-  if (!supabase) return
   const todo = todos.find((t) => t.id === id)
   if (!todo) return
   const completed = !todo.completed
+  if (isLocalTodoId(id)) {
+    todo.completed = completed
+    if (completed) {
+      const li = listEl?.querySelector(`[data-todo-id="${id}"]`)
+      const checkbox = li?.querySelector('.todo-item__checkbox')
+      const rect = checkbox?.getBoundingClientRect()
+      showConfetti(rect)
+    }
+    renderTodos()
+    return
+  }
+  if (!supabase) return
   const { error } = await supabase.from('todos').update({ completed }).eq('id', id)
   if (error) {
     console.error('Failed to toggle todo:', error)
@@ -373,10 +439,10 @@ function deleteTodo(id) {
   undoDeleteTimeout = setTimeout(() => {
     toastEl?.setAttribute('hidden', '')
     lastDeletedTodo = null
-    if (pendingDeleteId && supabase) {
+    if (pendingDeleteId && supabase && !isLocalTodoId(pendingDeleteId)) {
       supabase.from('todos').delete().eq('id', pendingDeleteId).then(() => {})
-      pendingDeleteId = null
     }
+    pendingDeleteId = null
     undoDeleteTimeout = null
   }, 5000)
 }
