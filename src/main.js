@@ -1,14 +1,20 @@
 import './style.css'
 import { supabase, hasSupabase } from './supabase.js'
 
-const form = document.querySelector('.todo-form')
+const form = document.querySelector('.add-form')
 const input = document.getElementById('todo-input')
 const listEl = document.querySelector('.todo-list')
 
 const authSignedIn = document.getElementById('auth-signed-in')
+const authInitial = document.getElementById('auth-initial')
 const authEmail = document.getElementById('auth-email')
 const authSignOut = document.getElementById('auth-sign-out')
-const authFormContainer = document.getElementById('auth-form-container')
+const authCta = document.getElementById('auth-cta')
+const authCtaMessage = document.getElementById('auth-cta-message')
+const authOpenLogin = document.getElementById('auth-open-login')
+const authOpenSignup = document.getElementById('auth-open-signup')
+const authModal = document.getElementById('auth-modal')
+const authModalClose = authModal?.querySelector('.auth-modal__close')
 const authSigninForm = document.getElementById('auth-signin-form')
 const authSignupForm = document.getElementById('auth-signup-form')
 const authSigninEmail = document.getElementById('auth-signin-email')
@@ -16,17 +22,37 @@ const authSigninPassword = document.getElementById('auth-signin-password')
 const authSignupEmail = document.getElementById('auth-signup-email')
 const authSignupPassword = document.getElementById('auth-signup-password')
 const authMessage = document.getElementById('auth-message')
-const authFormIntro = document.querySelector('.auth-form-intro')
-const authTabs = document.querySelectorAll('.auth-tab')
+const authModalTitle = document.getElementById('auth-modal-title')
+const authModalHint = document.getElementById('auth-modal-hint')
+const authSwitchToSignup = document.getElementById('auth-switch-to-signup')
+const authSwitchToSignin = document.getElementById('auth-switch-to-signin')
 const todoErrorEl = document.getElementById('todo-error')
-const todoCategorySelect = document.getElementById('todo-category')
-const todoFilterButtons = document.querySelectorAll('.todo-filter')
+const todoEmptyEl = document.getElementById('todo-empty')
+const todoAddBtn = document.getElementById('todo-add-btn')
+const todoAddBtnIcon = todoAddBtn?.querySelector('.add-form__submit-icon')
+const todoAddBtnSpinner = todoAddBtn?.querySelector('.add-form__spinner')
+const todoChipsAdd = document.querySelectorAll('.add-form__chips .chip')
+const todoFilterButtons = document.querySelectorAll('.filter-btn')
+const toastEl = document.getElementById('toast')
+const toastMessage = toastEl?.querySelector('.toast__message')
+const toastUndo = toastEl?.querySelector('.toast__undo')
 
 const CATEGORY_LABELS = { general: 'General', work: 'Work', personal: 'Personal', errands: 'Errands' }
+
+const TRASH_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
+
+const CHECKBOX_SVG =
+  '<svg class="todo-item__checkbox-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline class="todo-item__checkbox-check" points="9 12 11 14 15 10"/></svg>'
 
 let todos = []
 let currentUser = null
 let categoryFilter = ''
+let selectedCategoryForNew = 'general'
+let addLoading = false
+let undoDeleteTimeout = null
+let lastDeletedTodo = null
+let pendingDeleteId = null
 
 if (supabase) {
   supabase.auth.onAuthStateChange((_event, session) => {
@@ -36,42 +62,88 @@ if (supabase) {
 }
 
 function updateAuthUI() {
-  if (!hasSupabase() && authFormIntro) {
-    authFormIntro.textContent =
-      'Sign in is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment environment (e.g. Netlify env vars) and redeploy.'
-    authFormIntro.style.color = '#e57373'
+  if (!hasSupabase() && authCtaMessage) {
+    authCtaMessage.textContent = 'Sign in is not configured. Set env vars and redeploy.'
+    authCtaMessage.style.color = '#e57373'
+    authCtaMessage.removeAttribute('hidden')
+  } else if (authCtaMessage) {
+    authCtaMessage.setAttribute('hidden', '')
   }
   const isEmailUser = currentUser && !currentUser.is_anonymous
   if (isEmailUser) {
-    authSignedIn.hidden = false
-    authFormContainer.hidden = true
-    authEmail.textContent = currentUser.email ?? ''
+    authSignedIn?.removeAttribute('hidden')
+    authCta?.setAttribute('hidden', '')
+    if (authInitial) {
+      const email = currentUser.email ?? ''
+      authInitial.textContent = email ? email[0].toUpperCase() : '?'
+    }
+    if (authEmail) authEmail.textContent = currentUser.email ?? ''
+    closeAuthModal()
   } else {
-    authSignedIn.hidden = true
-    authFormContainer.hidden = false
+    authSignedIn?.setAttribute('hidden', '')
+    authCta?.removeAttribute('hidden')
   }
-  authMessage.hidden = true
-  authMessage.textContent = ''
+  authMessage?.setAttribute('hidden', '')
+  if (authMessage) authMessage.textContent = ''
+}
+
+const AUTH_VIEW = {
+  signin: {
+    title: 'Back in action!',
+    hint: 'Step back into your todo zone'
+  },
+  signup: {
+    title: 'Welcome!',
+    hint: 'Create an account and conquer your todos'
+  }
+}
+
+function setAuthView(tab) {
+  const view = AUTH_VIEW[tab] || AUTH_VIEW.signin
+  if (authModalTitle) authModalTitle.textContent = view.title
+  if (authModalHint) authModalHint.textContent = view.hint
+  authSigninForm?.classList.toggle('auth-form--hidden', tab !== 'signin')
+  authSignupForm?.classList.toggle('auth-form--hidden', tab !== 'signup')
+  authMessage?.setAttribute('hidden', '')
+}
+
+function openAuthModal(tab = 'signin') {
+  setAuthView(tab)
+  authModal?.showModal()
+}
+
+function closeAuthModal() {
+  authModal?.close()
 }
 
 function setAuthMessage(msg, isError = false) {
+  if (!authMessage) return
   authMessage.textContent = msg
-  authMessage.hidden = false
+  authMessage.removeAttribute('hidden')
   authMessage.style.color = isError ? '#e57373' : undefined
 }
 
 function showTodoError(msg) {
   if (todoErrorEl) {
     todoErrorEl.textContent = msg
-    todoErrorEl.hidden = false
-    todoErrorEl.style.color = '#e57373'
+    todoErrorEl.removeAttribute('hidden')
   }
 }
 
 function clearTodoError() {
   if (todoErrorEl) {
     todoErrorEl.textContent = ''
-    todoErrorEl.hidden = true
+    todoErrorEl.setAttribute('hidden', '')
+  }
+  input?.classList.remove('add-form__input--error')
+}
+
+function setAddLoading(loading) {
+  addLoading = loading
+  if (todoAddBtn) todoAddBtn.disabled = loading
+  if (todoAddBtnIcon) todoAddBtnIcon.hidden = loading
+  if (todoAddBtnSpinner) {
+    todoAddBtnSpinner.hidden = !loading
   }
 }
 
@@ -115,18 +187,25 @@ async function loadTodos() {
 
 async function addTodo(taskText, category = 'general') {
   const trimmed = typeof taskText === 'string' ? taskText.trim() : ''
-  if (!trimmed) return
+  if (!trimmed) {
+    input?.classList.add('add-form__input--error')
+    showTodoError('Enter a task.')
+    return
+  }
   if (!supabase) {
     showTodoError('Sign in is not configured.')
     return
   }
   const cat = typeof category === 'string' && category ? category : 'general'
+  setAddLoading(true)
+  clearTodoError()
   await supabase.auth.refreshSession()
   const {
     data: { session },
   } = await supabase.auth.getSession()
   const user = session?.user
   if (!user) {
+    setAddLoading(false)
     showTodoError('You must be signed in to add todos.')
     return
   }
@@ -135,6 +214,7 @@ async function addTodo(taskText, category = 'general') {
     .insert({ text: trimmed, completed: false, user_id: user.id, category: cat })
     .select('id, todo_text:text, completed, created_at, category')
     .single()
+  setAddLoading(false)
   if (error) {
     console.error('Failed to add todo:', error)
     showTodoError(error.message)
@@ -143,14 +223,15 @@ async function addTodo(taskText, category = 'general') {
   clearTodoError()
   currentUser = user
   if (inserted) {
-    todos.push({
+    const newTodo = {
       id: inserted.id,
       text: typeof inserted.todo_text === 'string' ? inserted.todo_text : (typeof inserted.text === 'string' ? inserted.text : trimmed),
       completed: Boolean(inserted.completed),
       created_at: inserted.created_at,
       category: typeof inserted.category === 'string' ? inserted.category : 'general',
-    })
-    renderTodos()
+    }
+    todos.push(newTodo)
+    renderTodos(true, newTodo.id)
   } else {
     await loadTodos()
   }
@@ -170,39 +251,73 @@ async function toggleTodo(id) {
   renderTodos()
 }
 
-async function deleteTodo(id) {
-  if (!supabase) return
-  const { error } = await supabase.from('todos').delete().eq('id', id)
-  if (error) {
-    console.error('Failed to delete todo:', error)
-    return
+function deleteTodo(id) {
+  const todo = todos.find((t) => t.id === id)
+  if (!todo) return
+  if (undoDeleteTimeout) clearTimeout(undoDeleteTimeout)
+  lastDeletedTodo = { ...todo }
+  pendingDeleteId = id
+  const li = listEl?.querySelector(`[data-todo-id="${id}"]`)
+  if (li) {
+    li.classList.add('todo-item--removing')
+    setTimeout(() => {
+      todos = todos.filter((t) => t.id !== id)
+      renderTodos()
+    }, 200)
+  } else {
+    todos = todos.filter((t) => t.id !== id)
+    renderTodos()
   }
-  todos = todos.filter((t) => t.id !== id)
-  renderTodos()
+  if (toastMessage) toastMessage.textContent = 'Todo deleted.'
+  toastEl?.removeAttribute('hidden')
+  undoDeleteTimeout = setTimeout(() => {
+    toastEl?.setAttribute('hidden', '')
+    lastDeletedTodo = null
+    if (pendingDeleteId && supabase) {
+      supabase.from('todos').delete().eq('id', pendingDeleteId).then(() => {})
+      pendingDeleteId = null
+    }
+    undoDeleteTimeout = null
+  }, 5000)
 }
 
-function renderTodos() {
+function undoDelete() {
+  if (!lastDeletedTodo) return
+  todos.push(lastDeletedTodo)
+  todos.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+  renderTodos()
+  toastEl?.setAttribute('hidden', '')
+  if (undoDeleteTimeout) clearTimeout(undoDeleteTimeout)
+  undoDeleteTimeout = null
+  lastDeletedTodo = null
+  pendingDeleteId = null
+}
+
+function renderTodos(justAdded = false, addedId = null) {
   const toShow = categoryFilter
     ? todos.filter((t) => (t.category || 'general') === categoryFilter)
     : todos
+  if (todoEmptyEl) todoEmptyEl.hidden = toShow.length > 0
   listEl.innerHTML = ''
   for (const todo of toShow) {
+    const cat = todo.category || 'general'
     const li = document.createElement('li')
-    li.className = 'todo-item' + (todo.completed ? ' todo-item--completed' : '')
+    li.className = 'todo-item todo-item--' + cat + (todo.completed ? ' todo-item--completed' : '')
+    if (justAdded && todo.id === addedId) li.classList.add('todo-item--adding')
     li.dataset.todoId = todo.id
 
-    const checkbox = document.createElement('input')
-    checkbox.type = 'checkbox'
+    const checkbox = document.createElement('button')
+    checkbox.type = 'button'
     checkbox.className = 'todo-item__checkbox'
-    checkbox.checked = todo.completed
+    checkbox.setAttribute('role', 'checkbox')
+    checkbox.setAttribute('aria-checked', todo.completed ? 'true' : 'false')
     checkbox.setAttribute('aria-label', 'Mark as ' + (todo.completed ? 'incomplete' : 'complete'))
+    checkbox.innerHTML = CHECKBOX_SVG
 
     const textEl = document.createElement('span')
     textEl.className = 'todo-item__text'
-    const label = typeof todo.text === 'string' ? todo.text : (todo.todo_text != null ? String(todo.todo_text) : '')
-    textEl.textContent = label
+    textEl.textContent = typeof todo.text === 'string' ? todo.text : (todo.todo_text != null ? String(todo.todo_text) : '')
 
-    const cat = todo.category || 'general'
     const pill = document.createElement('span')
     pill.className = 'todo-item__category todo-item__category--' + cat
     pill.setAttribute('aria-label', 'Category: ' + (CATEGORY_LABELS[cat] || cat))
@@ -212,59 +327,101 @@ function renderTodos() {
     deleteBtn.type = 'button'
     deleteBtn.className = 'todo-item__delete'
     deleteBtn.setAttribute('aria-label', 'Delete')
-    deleteBtn.textContent = 'Delete'
+    deleteBtn.innerHTML = TRASH_SVG
 
-    li.append(checkbox, textEl, pill, deleteBtn)
+    const main = document.createElement('div')
+    main.className = 'todo-item__main'
+    main.append(checkbox, textEl)
+
+    const footer = document.createElement('div')
+    footer.className = 'todo-item__footer'
+    footer.appendChild(pill)
+
+    li.append(main, footer, deleteBtn)
     listEl.appendChild(li)
   }
+  setTimeout(() => {
+    listEl.querySelectorAll('.todo-item--adding').forEach((el) => el.classList.remove('todo-item--adding'))
+  }, 300)
 }
 
-form.addEventListener('submit', (e) => {
+form?.addEventListener('submit', (e) => {
   e.preventDefault()
   clearTodoError()
   const value = input.value
-  const category = todoCategorySelect ? todoCategorySelect.value : 'general'
+  const category = selectedCategoryForNew || 'general'
   input.value = ''
   input.focus()
   addTodo(value, category)
 })
 
-todoFilterButtons.forEach((btn) => {
-  btn.addEventListener('click', () => {
+todoChipsAdd?.forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault()
+    const cat = btn.dataset.category ?? 'general'
+    selectedCategoryForNew = cat
+    todoChipsAdd.forEach((b) => b.classList.toggle('chip--active', (b.dataset.category ?? '') === cat))
+  })
+})
+
+todoFilterButtons?.forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault()
     categoryFilter = btn.dataset.category ?? ''
     todoFilterButtons.forEach((b) => {
       const bCat = b.dataset.category ?? ''
-      b.classList.toggle('todo-filter--active', (categoryFilter === '' && bCat === '') || (categoryFilter !== '' && bCat === categoryFilter))
+      b.classList.toggle('filter-btn--active', (categoryFilter === '' && bCat === '') || (categoryFilter !== '' && bCat === categoryFilter))
     })
     renderTodos()
   })
 })
 
-listEl.addEventListener('change', (e) => {
-  if (e.target.matches('.todo-item__checkbox')) {
+listEl?.addEventListener('click', (e) => {
+  const cb = e.target.closest('.todo-item__checkbox')
+  if (cb && cb.getAttribute('role') === 'checkbox') {
+    e.preventDefault()
     const id = e.target.closest('.todo-item').dataset.todoId
     toggleTodo(id)
   }
 })
 
-listEl.addEventListener('click', (e) => {
-  if (e.target.matches('.todo-item__delete')) {
+listEl?.addEventListener('click', (e) => {
+  if (e.target.closest('.todo-item__delete')) {
     const id = e.target.closest('.todo-item').dataset.todoId
     deleteTodo(id)
   }
 })
 
-authTabs.forEach((tab) => {
-  tab.addEventListener('click', () => {
-    const t = tab.dataset.tab
-    authTabs.forEach((x) => x.classList.toggle('auth-tab--active', x.dataset.tab === t))
-    authSigninForm.classList.toggle('auth-form--hidden', t !== 'signin')
-    authSignupForm.classList.toggle('auth-form--hidden', t !== 'signup')
-    authMessage.hidden = true
+authOpenLogin?.addEventListener('click', () => openAuthModal('signin'))
+authOpenSignup?.addEventListener('click', () => openAuthModal('signup'))
+authModalClose?.addEventListener('click', closeAuthModal)
+authModal?.addEventListener('close', () => {
+  authSigninPassword.value = ''
+  authSignupPassword.value = ''
+})
+authModal?.addEventListener('cancel', closeAuthModal)
+
+toastUndo?.addEventListener('click', () => {
+  undoDelete()
+})
+
+authSwitchToSignup?.addEventListener('click', () => setAuthView('signup'))
+authSwitchToSignin?.addEventListener('click', () => setAuthView('signin'))
+
+document.querySelectorAll('.auth-password-wrap').forEach((wrap) => {
+  const input = wrap.querySelector('input')
+  const btn = wrap.querySelector('.auth-password-toggle')
+  if (!input || !btn) return
+  btn.addEventListener('click', () => {
+    const isPassword = input.type === 'password'
+    input.type = isPassword ? 'text' : 'password'
+    wrap.classList.toggle('auth-password-wrap--visible', isPassword)
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password')
+    btn.setAttribute('title', isPassword ? 'Hide password' : 'Show password')
   })
 })
 
-authSigninForm.addEventListener('submit', async (e) => {
+authSigninForm?.addEventListener('submit', async (e) => {
   e.preventDefault()
   setAuthMessage('')
   if (!supabase) {
@@ -286,9 +443,10 @@ authSigninForm.addEventListener('submit', async (e) => {
   updateAuthUI()
   await loadTodos()
   authSigninPassword.value = ''
+  closeAuthModal()
 })
 
-authSignupForm.addEventListener('submit', async (e) => {
+authSignupForm?.addEventListener('submit', async (e) => {
   e.preventDefault()
   setAuthMessage('')
   if (!supabase) {
@@ -315,9 +473,10 @@ authSignupForm.addEventListener('submit', async (e) => {
   await loadTodos()
   authSignupPassword.value = ''
   setAuthMessage('Account created. You are signed in.')
+  closeAuthModal()
 })
 
-authSignOut.addEventListener('click', async () => {
+authSignOut?.addEventListener('click', async () => {
   if (!supabase) return
   await supabase.auth.signOut()
   await ensureSession()
