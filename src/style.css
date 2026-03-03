@@ -28,9 +28,11 @@
   --ease-out-emphasis: cubic-bezier(0.34, 1.2, 0.64, 1);
 
   /* Layout */
+  --safe-area-top: env(safe-area-inset-top, 0px);
   --app-max-width: 40rem;
   --add-row-height: 2.5rem;
   --nav-height: 3.5rem;
+  --nav-area-top: calc(var(--safe-area-top) + var(--nav-height));
   /* Floating menu: position panel just above it (menu bottom + menu height + gap) */
   --floating-menu-bottom: var(--space-xl);
   --floating-menu-height: 3.5rem;
@@ -316,7 +318,7 @@ body {
 /* Theme toggle (top right corner – two options, active state visible) */
 .theme-toggle {
   position: fixed;
-  top: var(--space-lg);
+  top: calc(var(--space-lg) + var(--safe-area-top));
   left: var(--space-xl);
   z-index: 10;
   display: inline-flex;
@@ -375,7 +377,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
 /* App bar – fixed top right (Sign in / Get started) */
 .app-bar {
   position: fixed;
-  top: var(--space-lg);
+  top: calc(var(--space-lg) + var(--safe-area-top));
   right: var(--space-xl);
   z-index: 10;
   display: flex;
@@ -888,7 +890,7 @@ html[data-theme="light"] .drag-handle-tooltip {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
-  padding-top: var(--nav-height);
+  padding-top: var(--nav-area-top);
   transition: gap 0.4s var(--ease-out-smooth), padding-bottom 0.4s var(--ease-out-smooth);
 }
 /* When floating menu is visible: collapse add block and brand header; filter and list sit just below nav; reserve space above bottom FAB */
@@ -1604,7 +1606,7 @@ html[data-theme="light"] .chip[data-category="errands"].chip--active {
 
 .filter-row-slot.filter-row-slot--visible {
   position: sticky;
-  top: var(--nav-height);
+  top: var(--nav-area-top);
   z-index: 50;
   overflow: visible;
   min-height: 0;
