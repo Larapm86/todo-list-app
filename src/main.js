@@ -625,6 +625,13 @@ if (supabase) {
   try {
     setRandomPlaceholder()
     auth.updateAuthUI()
+    todos.renderTodos(false, null, false)
+    if (!state.todos.length && todoEmptyEl) {
+      todoEmptyEl.hidden = true
+      setTimeout(() => {
+        if (todoEmptyEl && !state.todos.length) todoEmptyEl.hidden = false
+      }, 100)
+    }
     if (supabase) {
       await todos.ensureSession()
       auth.updateAuthUI()

@@ -1,6 +1,6 @@
 /** Auth UI: modal, tooltip, sign in/up */
 import { supabase, hasSupabase } from './supabase.js'
-import { AUTH_VIEW } from './constants.js'
+import { AUTH_VIEW, AUTH_TOOLTIP_LAST_SHOWN_KEY } from './constants.js'
 import * as state from './state.js'
 import {
   authTooltip,
@@ -36,8 +36,19 @@ export function hideAuthTooltip() {
   }
 }
 
+function todayDateString() {
+  const d = new Date()
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+}
+
 export function showAuthTooltip() {
   if (!authCta || !authTooltip) return
+  try {
+    const lastShown = typeof localStorage !== 'undefined' ? localStorage.getItem(AUTH_TOOLTIP_LAST_SHOWN_KEY) : null
+    const today = todayDateString()
+    if (lastShown === today) return
+    if (typeof localStorage !== 'undefined') localStorage.setItem(AUTH_TOOLTIP_LAST_SHOWN_KEY, today)
+  } catch (_) {}
   hideAuthTooltip()
   requestAnimationFrame(() => {
     if (!authCta || !authTooltip) return

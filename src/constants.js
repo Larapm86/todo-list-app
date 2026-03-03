@@ -46,6 +46,8 @@ export const CHECKBOX_SVG =
   '<svg class="todo-item__checkbox-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline class="todo-item__checkbox-check" points="9 12 11 14 15 10"/></svg>'
 
 export const THEME_STORAGE_KEY = 'todo-theme'
+/** localStorage key for last date (YYYY-MM-DD) sign-in tooltip was shown to anonymous user */
+export const AUTH_TOOLTIP_LAST_SHOWN_KEY = 'todo-auth-tooltip-last-shown'
 
 export const ADD_CHECK_DURATION_MS = 720
 export const TODO_ADD_IN_ANIMATION_MS = 550
