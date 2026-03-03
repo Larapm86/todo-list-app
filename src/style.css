@@ -1520,6 +1520,18 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   box-shadow: 0 0 0 2px rgba(91, 33, 182, 0.35);
 }
 
+/* Light theme: add-form chips – same look as desktop, consistent with theme */
+html[data-theme="light"] .chip {
+  background: var(--bg-hover);
+  color: var(--color-text-primary);
+}
+html[data-theme="light"] .chip:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .chip:focus-visible {
+  box-shadow: var(--focus-ring-light);
+}
+
 /* Category chip active state – one color per category */
 .chip[data-category="general"].chip--active {
   border-color: var(--category-general);
@@ -1754,6 +1766,24 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   border-color: var(--border-default);
   color: var(--color-text-primary);
   background: var(--bg-hover);
+}
+
+/* Light theme: filter row tag buttons – consistent with theme on mobile and desktop */
+html[data-theme="light"] .filter-btn {
+  color: var(--color-text-muted);
+  background: transparent;
+}
+html[data-theme="light"] .filter-btn:hover {
+  color: var(--color-text-primary);
+  background: var(--bg-hover);
+}
+html[data-theme="light"] .filter-btn.filter-btn--active {
+  border-color: var(--border-default);
+  color: var(--color-text-primary);
+  background: rgba(0, 0, 0, 0.06);
+}
+html[data-theme="light"] .filter-btn:focus-visible {
+  box-shadow: var(--focus-ring-light);
 }
 
 /* Desktop: tag filters and status filter in a single horizontal row */
@@ -2555,6 +2585,33 @@ button {
   html:not([data-theme]) .todo-item__category-option--errands {
     background: color-mix(in srgb, #e2e6ed 30%, #c4901e);
     color: #fff;
+  }
+  /* System light: add-form chips and filter tags – same as explicit light theme */
+  html:not([data-theme]) .chip {
+    background: var(--bg-hover);
+    color: var(--color-text-primary);
+  }
+  html:not([data-theme]) .chip:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+  html:not([data-theme]) .chip:focus-visible {
+    box-shadow: var(--focus-ring-light);
+  }
+  html:not([data-theme]) .filter-btn {
+    color: var(--color-text-muted);
+    background: transparent;
+  }
+  html:not([data-theme]) .filter-btn:hover {
+    color: var(--color-text-primary);
+    background: var(--bg-hover);
+  }
+  html:not([data-theme]) .filter-btn.filter-btn--active {
+    border-color: var(--border-default);
+    color: var(--color-text-primary);
+    background: rgba(0, 0, 0, 0.06);
+  }
+  html:not([data-theme]) .filter-btn:focus-visible {
+    box-shadow: var(--focus-ring-light);
   }
 }
 
