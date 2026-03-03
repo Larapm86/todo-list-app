@@ -1885,7 +1885,11 @@ html[data-theme="light"] .filter-btn:focus-visible {
   .chip[data-category="work"].chip--active { background: var(--category-work); color: var(--category-work-text); border-color: var(--category-work); }
   .chip[data-category="personal"].chip--active { background: var(--category-personal); color: var(--category-personal-text); border-color: var(--category-personal); }
   .chip[data-category="errands"].chip--active { background: var(--category-errands); color: var(--category-errands-text); border-color: var(--category-errands); }
-  .filter-btn { color: var(--color-text-muted); background: transparent; }
+  .filter-btn {
+    color: var(--color-text-muted);
+    background: transparent;
+    font-size: 0.875rem; /* 14px – tag filter typeface on mobile */
+  }
   .filter-btn:hover { color: var(--color-text-primary); background: var(--bg-hover); }
   .filter-btn.filter-btn--active { border-color: var(--border-default); color: var(--color-text-primary); background: var(--bg-hover); }
   .todo-item__category { background: var(--tag-bg); color: var(--tag-text); }

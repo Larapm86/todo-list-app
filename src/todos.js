@@ -163,8 +163,9 @@ export async function loadTodos() {
 
   const { data, error } = await supabase
     .from('todos')
-    .select('id, todo_text:text, completed, created_at, category')
+    .select('id, todo_text:text, completed, created_at, category, position')
     .eq('user_id', state.currentUser.id)
+    .order('position', { ascending: true })
     .order('created_at', { ascending: true })
   if (error) {
     console.error('Failed to load todos:', error)
