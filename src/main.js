@@ -36,6 +36,7 @@ const filterRowSlotEl = document.querySelector('.filter-row-slot')
 const todoAddBtn = document.getElementById('todo-add-btn')
 const todoAddBtnIcon = todoAddBtn?.querySelector('.add-form__submit-icon')
 const todoAddBtnSpinner = todoAddBtn?.querySelector('.add-form__spinner')
+const todoAddBtnCheck = todoAddBtn?.querySelector('.add-form__check')
 const todoChipsAdd = document.querySelectorAll('.add-form__chips .chip')
 const todoFilterButtons = document.querySelectorAll('.filter-btn')
 const todoNoMatchEl = document.getElementById('todo-no-match')
@@ -53,17 +54,17 @@ const themeLightBtn = document.getElementById('theme-light')
 const CATEGORY_LABELS = { general: 'General', work: 'Work', personal: 'Personal', errands: 'Errands' }
 
 const PLACEHOLDER_EXAMPLES = [
-  'Example: Dance like nobody\'s watching',
-  'Example: Adopt a pet unicorn',
-  'Example: Send a meme to a friend',
-  'Example: Write a letter to your future self',
-  'Example: Pretend you\'re a superhero for 5 min',
-  'Example: Build a pillow fort',
-  'Example: Invent a new ice cream flavor',
-  'Example: Try a new accent for the day',
-  'Example: Create a secret handshake',
-  'Example: Give your plant a motivational speech',
-  'Example: Finish reading that book',
+  'e.g. Dance like nobody\'s watching',
+  'e.g. Adopt a pet unicorn',
+  'e.g. Send a meme to a friend',
+  'e.g. Write a letter to your future self',
+  'e.g. Pretend you\'re a superhero for 5 min',
+  'e.g. Build a pillow fort',
+  'e.g. Invent a new ice cream flavor',
+  'e.g. Try a new accent for the day',
+  'e.g. Create a secret handshake',
+  'e.g. Give your plant a motivational speech',
+  'e.g. Finish reading that book',
 ]
 
 function setRandomPlaceholder() {
@@ -141,6 +142,7 @@ let categoryFilter = ''
 let statusFilter = 'all' // 'all' | 'active' | 'completed'
 let selectedCategoryForNew = 'general'
 let addLoading = false
+let addCheckResetTimeoutId = null
 let undoDeleteTimeout = null
 let lastDeletedTodo = null
 let pendingDeleteId = null
@@ -275,6 +277,29 @@ function setAddLoading(loading) {
   }
 }
 
+const ADD_CHECK_DURATION_MS = 720
+const TODO_ADD_IN_ANIMATION_MS = 550
+
+function showAddSuccessCheck() {
+  if (addCheckResetTimeoutId != null) {
+    clearTimeout(addCheckResetTimeoutId)
+    addCheckResetTimeoutId = null
+  }
+  if (!todoAddBtnCheck || !todoAddBtnIcon) return
+  if (todoAddBtnSpinner) todoAddBtnSpinner.hidden = true
+  todoAddBtnIcon.hidden = true
+  todoAddBtnCheck.hidden = false
+  todoAddBtnCheck.classList.remove('add-form__check--animate')
+  void todoAddBtnCheck.offsetWidth
+  todoAddBtnCheck.classList.add('add-form__check--animate')
+  addCheckResetTimeoutId = setTimeout(() => {
+    addCheckResetTimeoutId = null
+    todoAddBtnCheck.classList.remove('add-form__check--animate')
+    todoAddBtnCheck.hidden = true
+    todoAddBtnIcon.hidden = false
+  }, ADD_CHECK_DURATION_MS)
+}
+
 async function ensureSession() {
   if (!supabase) return
   const {
@@ -345,7 +370,8 @@ async function addTodo(taskText, category = 'general') {
     }
     todos.push(newTodo)
     renderTodos(true, newTodo.id)
-    showAuthTooltip()
+    showAddSuccessCheck()
+    setTimeout(showAuthTooltip, TODO_ADD_IN_ANIMATION_MS)
     return
   }
   const { data: inserted, error } = await supabase
@@ -371,8 +397,10 @@ async function addTodo(taskText, category = 'general') {
     }
     todos.push(newTodo)
     renderTodos(true, newTodo.id)
+    showAddSuccessCheck()
   } else {
     await loadTodos()
+    showAddSuccessCheck()
   }
 }
 
@@ -522,7 +550,7 @@ function renderTodos(justAdded = false, addedId = null, updateFilterRowVisibilit
   }
   setTimeout(() => {
     listEl.querySelectorAll('.todo-item--adding').forEach((el) => el.classList.remove('todo-item--adding'))
-  }, 450)
+  }, TODO_ADD_IN_ANIMATION_MS)
 }
 
 let chipJustTapped = false
