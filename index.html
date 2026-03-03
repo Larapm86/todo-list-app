@@ -99,20 +99,34 @@
           <p id="todo-error" class="add-form__error" role="alert" hidden></p>
         </section>
 
-        <!-- Filter: subtle, secondary -->
-        <div class="filter-bar" role="group" aria-label="Filter list">
-          <div class="filter-bar__options">
-            <button type="button" class="filter-btn filter-btn--active" data-category="">All</button>
-            <button type="button" class="filter-btn" data-category="general">General</button>
-            <button type="button" class="filter-btn" data-category="work">Work</button>
-            <button type="button" class="filter-btn" data-category="personal">Personal</button>
-            <button type="button" class="filter-btn" data-category="errands">Errands</button>
+        <!-- Filter row: category (left) + status dropdown (right) -->
+        <div class="filter-row" role="group" aria-label="Filter list">
+          <div class="filter-bar" role="group" aria-label="Filter by category">
+            <div class="filter-bar__options">
+              <button type="button" class="filter-btn filter-btn--active" data-category="">Everything</button>
+              <button type="button" class="filter-btn" data-category="general">General</button>
+              <button type="button" class="filter-btn" data-category="work">Work</button>
+              <button type="button" class="filter-btn" data-category="personal">Personal</button>
+              <button type="button" class="filter-btn" data-category="errands">Errands</button>
+            </div>
+          </div>
+          <div id="status-dropdown" class="status-dropdown" role="group" aria-label="Filter by status">
+            <button type="button" id="status-filter-trigger" class="status-dropdown__trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Status filter">
+              <span id="status-filter-label" class="status-dropdown__label">View all</span>
+              <svg class="status-dropdown__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div id="status-dropdown-panel" class="status-dropdown__panel" role="listbox" aria-hidden="true" hidden>
+              <button type="button" class="status-dropdown__option status-dropdown__option--active" role="option" aria-selected="true" data-status="all">View all</button>
+              <button type="button" class="status-dropdown__option" role="option" aria-selected="false" data-status="active">Active</button>
+              <button type="button" class="status-dropdown__option" role="option" aria-selected="false" data-status="completed">Checked</button>
+            </div>
           </div>
         </div>
 
         <!-- List -->
         <section class="list-section" aria-label="Your tasks">
           <div id="todo-empty" class="empty-state" hidden>No tasks yet. Add your first one above.</div>
+          <div id="todo-no-match" class="empty-state" hidden>No tasks match your filter.</div>
           <ul class="todo-list" aria-label="Todo items"></ul>
         </section>
       </main>

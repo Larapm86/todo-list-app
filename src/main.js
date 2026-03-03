@@ -33,6 +33,12 @@ const todoAddBtnIcon = todoAddBtn?.querySelector('.add-form__submit-icon')
 const todoAddBtnSpinner = todoAddBtn?.querySelector('.add-form__spinner')
 const todoChipsAdd = document.querySelectorAll('.add-form__chips .chip')
 const todoFilterButtons = document.querySelectorAll('.filter-btn')
+const todoNoMatchEl = document.getElementById('todo-no-match')
+const statusDropdown = document.getElementById('status-dropdown')
+const statusFilterTrigger = document.getElementById('status-filter-trigger')
+const statusFilterLabel = document.getElementById('status-filter-label')
+const statusDropdownPanel = document.getElementById('status-dropdown-panel')
+const statusDropdownOptions = document.querySelectorAll('.status-dropdown__option')
 const toastEl = document.getElementById('toast')
 const toastMessage = toastEl?.querySelector('.toast__message')
 const toastUndo = toastEl?.querySelector('.toast__undo')
@@ -107,6 +113,7 @@ function showConfetti(originRect) {
 let todos = []
 let currentUser = null
 let categoryFilter = ''
+let statusFilter = 'all' // 'all' | 'active' | 'completed'
 let selectedCategoryForNew = 'general'
 let addLoading = false
 let undoDeleteTimeout = null
@@ -359,10 +366,15 @@ function undoDelete() {
 }
 
 function renderTodos(justAdded = false, addedId = null) {
-  const toShow = categoryFilter
+  let toShow = categoryFilter
     ? todos.filter((t) => (t.category || 'general') === categoryFilter)
-    : todos
-  if (todoEmptyEl) todoEmptyEl.hidden = toShow.length > 0
+    : [...todos]
+  if (statusFilter === 'active') toShow = toShow.filter((t) => !t.completed)
+  else if (statusFilter === 'completed') toShow = toShow.filter((t) => t.completed)
+  const hasTodos = todos.length > 0
+  const hasMatch = toShow.length > 0
+  if (todoEmptyEl) todoEmptyEl.hidden = hasTodos
+  if (todoNoMatchEl) todoNoMatchEl.hidden = !hasTodos || hasMatch
   listEl.innerHTML = ''
   for (const todo of toShow) {
     const cat = todo.category || 'general'
@@ -428,6 +440,59 @@ todoChipsAdd?.forEach((btn) => {
     todoChipsAdd.forEach((b) => b.classList.toggle('chip--active', (b.dataset.category ?? '') === cat))
   })
 })
+
+const STATUS_LABELS = { all: 'View all', active: 'Active', completed: 'Checked' }
+
+function syncStatusDropdownUI() {
+  if (statusFilterLabel) statusFilterLabel.textContent = STATUS_LABELS[statusFilter] ?? 'View all'
+  statusDropdownOptions?.forEach((opt) => {
+    const val = opt.dataset.status ?? 'all'
+    const active = val === statusFilter
+    opt.classList.toggle('status-dropdown__option--active', active)
+    opt.setAttribute('aria-selected', active ? 'true' : 'false')
+  })
+}
+
+function closeStatusDropdown() {
+  if (!statusDropdown) return
+  statusDropdown.classList.remove('is-open')
+  statusFilterTrigger?.setAttribute('aria-expanded', 'false')
+  statusDropdownPanel?.setAttribute('hidden', '')
+  statusDropdownPanel?.setAttribute('aria-hidden', 'true')
+}
+
+function openStatusDropdown() {
+  if (!statusDropdown) return
+  statusDropdown.classList.add('is-open')
+  statusFilterTrigger?.setAttribute('aria-expanded', 'true')
+  statusDropdownPanel?.removeAttribute('hidden')
+  statusDropdownPanel?.setAttribute('aria-hidden', 'false')
+}
+
+syncStatusDropdownUI()
+
+statusFilterTrigger?.addEventListener('click', (e) => {
+  e.stopPropagation()
+  const isOpen = statusDropdown?.classList.contains('is-open')
+  if (isOpen) closeStatusDropdown()
+  else openStatusDropdown()
+})
+
+statusDropdownOptions?.forEach((opt) => {
+  opt.addEventListener('click', (e) => {
+    e.stopPropagation()
+    statusFilter = opt.dataset.status ?? 'all'
+    syncStatusDropdownUI()
+    closeStatusDropdown()
+    renderTodos()
+  })
+})
+
+document.addEventListener('click', () => closeStatusDropdown())
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeStatusDropdown()
+})
+statusDropdownPanel?.addEventListener('click', (e) => e.stopPropagation())
 
 todoFilterButtons?.forEach((btn) => {
   btn.addEventListener('click', (e) => {
