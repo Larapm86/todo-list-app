@@ -121,10 +121,10 @@ export async function loadTodos() {
   }
   // Capture session we're loading for so we don't overwrite state if session changed (e.g. sign-out) before this call completes
   const loadingForUserId = state.currentUser?.id ?? null
-  // No real user (e.g. offline): keep only local todos, don't query DB with a synthetic ID
+  // No current user (session null): do not overwrite the list – avoids "lost todos" when session
+  // briefly goes null (e.g. token refresh, signed out in another tab). Explicit sign-out goes
+  // through ensureSession() then loadTodos() with anonymous user, so list is cleared there.
   if (!state.currentUser) {
-    state.setTodos(state.todos.filter((t) => isLocalTodoId(t.id)))
-    renderTodos()
     return
   }
   const isAnonymous = state.currentUser.is_anonymous === true
