@@ -47,6 +47,26 @@ const themeLightBtn = document.getElementById('theme-light')
 
 const CATEGORY_LABELS = { general: 'General', work: 'Work', personal: 'Personal', errands: 'Errands' }
 
+const PLACEHOLDER_EXAMPLES = [
+  'Example: Dance like nobody\'s watching',
+  'Example: Adopt a pet unicorn',
+  'Example: Send a meme to a friend',
+  'Example: Write a letter to your future self',
+  'Example: Pretend you\'re a superhero for 5 min',
+  'Example: Build a pillow fort',
+  'Example: Invent a new ice cream flavor',
+  'Example: Try a new accent for the day',
+  'Example: Create a secret handshake',
+  'Example: Give your plant a motivational speech',
+  'Example: Finish reading that book',
+]
+
+function setRandomPlaceholder() {
+  if (input && PLACEHOLDER_EXAMPLES.length) {
+    input.placeholder = PLACEHOLDER_EXAMPLES[Math.floor(Math.random() * PLACEHOLDER_EXAMPLES.length)]
+  }
+}
+
 const THEME_STORAGE_KEY = 'todo-theme'
 function getPreferredTheme() {
   const stored = localStorage.getItem(THEME_STORAGE_KEY)
@@ -428,6 +448,7 @@ form?.addEventListener('submit', (e) => {
   const value = input.value
   const category = selectedCategoryForNew || 'general'
   input.value = ''
+  setRandomPlaceholder()
   input.focus()
   addTodo(value, category)
 })
@@ -616,6 +637,7 @@ authSignOut?.addEventListener('click', async () => {
 
 ;(async () => {
   try {
+    setRandomPlaceholder()
     updateAuthUI()
     if (supabase) {
       await ensureSession()

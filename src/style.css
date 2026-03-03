@@ -109,7 +109,9 @@ html[data-theme="light"] .auth-modal__content {
   background: #f5f5f5;
   border-color: rgba(0, 0, 0, 0.08);
 }
-html[data-theme="light"] .auth-modal__content .auth-modal__close:focus-visible,
+html[data-theme="light"] .auth-modal__content .auth-modal__close:focus-visible {
+  box-shadow: none;
+}
 html[data-theme="light"] .auth-modal__content .auth-form__switch:focus-visible,
 html[data-theme="light"] .auth-modal__content .auth-input:focus-visible,
 html[data-theme="light"] .auth-modal__content .auth-submit:focus-visible,
@@ -472,8 +474,8 @@ html[data-theme="light"] .theme-toggle__option:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 1.75rem;
+  height: 1.75rem;
   padding: 0;
   margin-right: calc(-1 * var(--space-xs));
   background: transparent;
@@ -485,8 +487,8 @@ html[data-theme="light"] .theme-toggle__option:hover {
 }
 
 .auth-modal__close-icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 .auth-modal__close:hover {
@@ -495,8 +497,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
 
 .auth-modal__close:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring);
-  border-radius: var(--radius-sm);
+  box-shadow: none;
 }
 
 .auth-modal__title {
@@ -569,14 +570,23 @@ html[data-theme="light"] .theme-toggle__option:hover {
 
 .auth-input--password {
   padding-right: 2.75rem;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* Hide browser’s built-in key/reveal icon so only our eye icon shows */
 .auth-input--password::-ms-reveal {
-  display: none;
+  display: none !important;
 }
 .auth-input--password::-ms-clear {
-  display: none;
+  display: none !important;
+}
+/* Chrome / Safari: remove default password field chrome that can show key icon */
+.auth-input--password::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: -9999px;
 }
 
 .auth-password-toggle {
@@ -710,10 +720,55 @@ html[data-theme="light"] .theme-toggle__option:hover {
   padding-top: 3.5rem;
 }
 
-/* Brand header – centered title */
+/* Brand header – pixel pencil + centered title */
 .brand-header {
   text-align: center;
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--space-xl);
+  overflow: visible;
+}
+.brand-header__icon {
+  display: block;
+  margin: 0 auto var(--space-xs);
+  height: 2.75rem;
+  width: 1rem;
+  color: var(--color-text-muted);
+  overflow: visible;
+}
+.brand-header__icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.brand-header__icon--pencil {
+  transform: rotate(-45deg);
+}
+.brand-header__icon--pencil svg {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+/* Lead (mine): grey in dark theme for contrast, black in light theme */
+.brand-header__icon--pencil .pencil-lead {
+  fill: #9ca3af;
+}
+html[data-theme="light"] .brand-header__icon--pencil .pencil-lead {
+  fill: #1a1a1a;
+}
+
+/* Dark theme only: whole pencil in shades of grey */
+html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-outline rect {
+  fill: #374151 !important;
+}
+html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-eraser rect {
+  fill: #d1d5db !important;
+}
+html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-ferrule rect {
+  fill: #9ca3af !important;
+}
+html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-body rect {
+  fill: #6b7280 !important;
+}
+html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
+  fill: #4b5563 !important;
 }
 .brand-header__title {
   margin: 0;
@@ -722,6 +777,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
   letter-spacing: -0.03em;
   line-height: var(--leading-tight);
   color: var(--color-text-primary);
+  text-decoration: line-through;
 }
 
 /* Add block */
@@ -1439,6 +1495,9 @@ button {
   button {
     background-color: #f9f9f9;
   }
+  .brand-header__icon--pencil .pencil-lead {
+    fill: #1a1a1a;
+  }
   .add-form__input {
     background-color: #f5f5f5;
   }
@@ -1452,7 +1511,9 @@ button {
     background: #f5f5f5;
     border-color: rgba(0, 0, 0, 0.08);
   }
-  .auth-modal__content .auth-modal__close:focus-visible,
+  .auth-modal__content .auth-modal__close:focus-visible {
+    box-shadow: none;
+  }
   .auth-modal__content .auth-form__switch:focus-visible,
   .auth-modal__content .auth-input:focus-visible,
   .auth-modal__content .auth-submit:focus-visible,

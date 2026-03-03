@@ -44,7 +44,7 @@
             <input type="email" id="auth-signin-email" class="auth-input" placeholder="you@example.com" required autocomplete="email" />
             <label for="auth-signin-password">Password</label>
             <div class="auth-password-wrap">
-              <input type="password" id="auth-signin-password" class="auth-input auth-input--password" placeholder="Password" autocomplete="off" />
+              <input type="password" id="auth-signin-password" class="auth-input auth-input--password" placeholder="Password" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" />
               <button type="button" class="auth-password-toggle" aria-label="Show password" title="Show password">
                 <svg class="auth-password-toggle__icon auth-password-toggle__icon--show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 <svg class="auth-password-toggle__icon auth-password-toggle__icon--hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -58,7 +58,7 @@
             <input type="email" id="auth-signup-email" class="auth-input" placeholder="you@example.com" required autocomplete="email" />
             <label for="auth-signup-password">Password</label>
             <div class="auth-password-wrap">
-              <input type="password" id="auth-signup-password" class="auth-input auth-input--password" placeholder="At least 6 characters" minlength="6" autocomplete="off" />
+              <input type="password" id="auth-signup-password" class="auth-input auth-input--password" name="signup_password" placeholder="At least 6 characters" minlength="6" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" />
               <button type="button" class="auth-password-toggle" aria-label="Show password" title="Show password">
                 <svg class="auth-password-toggle__icon auth-password-toggle__icon--show" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 <svg class="auth-password-toggle__icon auth-password-toggle__icon--hide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -74,6 +74,66 @@
       <!-- Main content -->
       <main class="main">
         <div class="brand-header" aria-hidden="true">
+          <span class="brand-header__icon brand-header__icon--pencil" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 22" aria-hidden="true">
+              <!-- pixel pencil: black outline, yellow body, grey ferrule, pink eraser, brown tip, black lead. Dark theme: overridden to greys in CSS -->
+              <g stroke="none">
+                <g class="pencil-outline">
+                  <rect x="1" y="0" width="1" height="1" fill="#1a1a1a"/><rect x="2" y="0" width="1" height="1" fill="#1a1a1a"/><rect x="3" y="0" width="1" height="1" fill="#1a1a1a"/><rect x="4" y="0" width="1" height="1" fill="#1a1a1a"/><rect x="5" y="0" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="0" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="1" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="1" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="2" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="2" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="3" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="3" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="4" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="4" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="5" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="5" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="6" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="6" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="7" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="7" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="8" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="8" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="9" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="9" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="10" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="10" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="11" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="11" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="12" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="12" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="13" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="13" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="14" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="14" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="15" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="15" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="1" y="16" width="1" height="1" fill="#1a1a1a"/><rect x="6" y="16" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="2" y="17" width="1" height="1" fill="#1a1a1a"/><rect x="5" y="17" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="2" y="18" width="1" height="1" fill="#1a1a1a"/><rect x="4" y="18" width="1" height="1" fill="#1a1a1a"/><rect x="5" y="18" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="3" y="19" width="1" height="1" fill="#1a1a1a"/><rect x="4" y="19" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="3" y="20" width="1" height="1" fill="#1a1a1a"/><rect x="4" y="20" width="1" height="1" fill="#1a1a1a"/>
+                  <rect x="3" y="21" width="1" height="1" fill="#1a1a1a"/><rect x="4" y="21" width="1" height="1" fill="#1a1a1a"/>
+                </g>
+                <g class="pencil-eraser">
+                  <rect x="2" y="1" width="1" height="1" fill="#f9a8d4"/><rect x="3" y="1" width="1" height="1" fill="#f9a8d4"/><rect x="4" y="1" width="1" height="1" fill="#ec4899"/><rect x="5" y="1" width="1" height="1" fill="#ec4899"/>
+                  <rect x="2" y="2" width="1" height="1" fill="#fbcfe8"/><rect x="3" y="2" width="1" height="1" fill="#f9a8d4"/><rect x="4" y="2" width="1" height="1" fill="#ec4899"/><rect x="5" y="2" width="1" height="1" fill="#db2777"/>
+                </g>
+                <g class="pencil-ferrule">
+                  <rect x="2" y="3" width="1" height="1" fill="#e2e8f0"/><rect x="3" y="3" width="1" height="1" fill="#cbd5e1"/><rect x="4" y="3" width="1" height="1" fill="#94a3b8"/><rect x="5" y="3" width="1" height="1" fill="#94a3b8"/>
+                  <rect x="2" y="4" width="1" height="1" fill="#cbd5e1"/><rect x="3" y="4" width="1" height="1" fill="#e2e8f0"/><rect x="4" y="4" width="1" height="1" fill="#94a3b8"/><rect x="5" y="4" width="1" height="1" fill="#64748b"/>
+                </g>
+                <g class="pencil-body">
+                  <rect x="2" y="5" width="1" height="1" fill="#fde047"/><rect x="3" y="5" width="1" height="1" fill="#fde047"/><rect x="4" y="5" width="1" height="1" fill="#ca8a04"/><rect x="5" y="5" width="1" height="1" fill="#ca8a04"/>
+                  <rect x="2" y="6" width="1" height="1" fill="#fde047"/><rect x="3" y="6" width="1" height="1" fill="#facc15"/><rect x="4" y="6" width="1" height="1" fill="#ca8a04"/><rect x="5" y="6" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="7" width="1" height="1" fill="#fde047"/><rect x="3" y="7" width="1" height="1" fill="#facc15"/><rect x="4" y="7" width="1" height="1" fill="#ca8a04"/><rect x="5" y="7" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="8" width="1" height="1" fill="#fde047"/><rect x="3" y="8" width="1" height="1" fill="#facc15"/><rect x="4" y="8" width="1" height="1" fill="#ca8a04"/><rect x="5" y="8" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="9" width="1" height="1" fill="#fde047"/><rect x="3" y="9" width="1" height="1" fill="#facc15"/><rect x="4" y="9" width="1" height="1" fill="#ca8a04"/><rect x="5" y="9" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="10" width="1" height="1" fill="#fde047"/><rect x="3" y="10" width="1" height="1" fill="#facc15"/><rect x="4" y="10" width="1" height="1" fill="#ca8a04"/><rect x="5" y="10" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="11" width="1" height="1" fill="#fde047"/><rect x="3" y="11" width="1" height="1" fill="#facc15"/><rect x="4" y="11" width="1" height="1" fill="#ca8a04"/><rect x="5" y="11" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="12" width="1" height="1" fill="#fde047"/><rect x="3" y="12" width="1" height="1" fill="#facc15"/><rect x="4" y="12" width="1" height="1" fill="#ca8a04"/><rect x="5" y="12" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="13" width="1" height="1" fill="#fde047"/><rect x="3" y="13" width="1" height="1" fill="#facc15"/><rect x="4" y="13" width="1" height="1" fill="#ca8a04"/><rect x="5" y="13" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="14" width="1" height="1" fill="#fde047"/><rect x="3" y="14" width="1" height="1" fill="#facc15"/><rect x="4" y="14" width="1" height="1" fill="#ca8a04"/><rect x="5" y="14" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="15" width="1" height="1" fill="#fde047"/><rect x="3" y="15" width="1" height="1" fill="#facc15"/><rect x="4" y="15" width="1" height="1" fill="#ca8a04"/><rect x="5" y="15" width="1" height="1" fill="#a16207"/>
+                  <rect x="2" y="16" width="1" height="1" fill="#fde047"/><rect x="3" y="16" width="1" height="1" fill="#facc15"/><rect x="4" y="16" width="1" height="1" fill="#ca8a04"/><rect x="5" y="16" width="1" height="1" fill="#a16207"/>
+                </g>
+                <g class="pencil-wood">
+                  <rect x="2" y="17" width="1" height="1" fill="#d6d3d1"/><rect x="3" y="17" width="1" height="1" fill="#a8a29e"/><rect x="4" y="17" width="1" height="1" fill="#78716c"/><rect x="5" y="17" width="1" height="1" fill="#57534e"/>
+                  <rect x="3" y="18" width="1" height="1" fill="#a8a29e"/><rect x="4" y="18" width="1" height="1" fill="#57534e"/>
+                  <rect x="3" y="19" width="1" height="1" fill="#78716c"/><rect x="4" y="19" width="1" height="1" fill="#44403c"/>
+                </g>
+                <rect class="pencil-lead" x="3" y="20" width="1" height="1"/><rect class="pencil-lead" x="4" y="20" width="1" height="1"/>
+                <rect class="pencil-lead" x="3" y="21" width="1" height="1"/><rect class="pencil-lead" x="4" y="21" width="1" height="1"/>
+              </g>
+            </svg>
+          </span>
           <h1 class="brand-header__title">Todos</h1>
         </div>
         <!-- Add task: one clear block -->
@@ -81,7 +141,7 @@
           <form class="add-form" action="#" aria-label="Add todo">
             <label for="todo-input" class="add-form__label">What's on your list today?</label>
             <div class="add-form__row">
-              <input type="text" id="todo-input" class="add-form__input" name="todo" placeholder="Example: Finish reading that book" autocomplete="off" />
+              <input type="text" id="todo-input" class="add-form__input" name="todo" placeholder="" autocomplete="off" />
               <button type="submit" class="add-form__submit" id="todo-add-btn" aria-label="Add task">
                 <span class="add-form__submit-icon" aria-hidden="true">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
