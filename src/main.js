@@ -525,18 +525,45 @@ function renderTodos(justAdded = false, addedId = null, updateFilterRowVisibilit
   }, 450)
 }
 
-form?.addEventListener('submit', (e) => {
-  e.preventDefault()
-  clearTodoError()
-  const value = input.value
-  const category = selectedCategoryForNew || 'general'
-  input.value = ''
-  setRandomPlaceholder()
-  input.focus()
-  addTodo(value, category)
-})
+let chipJustTapped = false
+let addFormBlurTimeout = null
+
+function updateAddFormHasValue() {
+  if (!form) return
+  if (input?.value?.trim()) form.classList.add('add-form--has-value')
+  else form.classList.remove('add-form--has-value')
+}
+
+function scheduleHideTagsIfBlurred() {
+  if (addFormBlurTimeout) clearTimeout(addFormBlurTimeout)
+  addFormBlurTimeout = setTimeout(() => {
+    addFormBlurTimeout = null
+    if (!form || !input) return
+    if (chipJustTapped) {
+      chipJustTapped = false
+      return
+    }
+    if (input.value.trim() !== '') {
+      form.classList.add('add-form--has-value')
+      return
+    }
+    const active = document.activeElement
+    if (active && form.contains(active)) return
+    form.classList.remove('add-form--tags-visible')
+  }, 200)
+}
+
+if (input && form) {
+  input.addEventListener('focus', () => form.classList.add('add-form--tags-visible'))
+  input.addEventListener('blur', scheduleHideTagsIfBlurred)
+  input.addEventListener('input', updateAddFormHasValue)
+}
 
 todoChipsAdd?.forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => {
+    chipJustTapped = true
+    setTimeout(() => { chipJustTapped = false }, 400)
+  })
   btn.addEventListener('click', (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -544,6 +571,18 @@ todoChipsAdd?.forEach((btn) => {
     selectedCategoryForNew = cat
     todoChipsAdd.forEach((b) => b.classList.toggle('chip--active', (b.dataset.category ?? '') === cat))
   })
+})
+
+form?.addEventListener('submit', (e) => {
+  e.preventDefault()
+  clearTodoError()
+  const value = input.value
+  const category = selectedCategoryForNew || 'general'
+  input.value = ''
+  updateAddFormHasValue()
+  setRandomPlaceholder()
+  input.focus()
+  addTodo(value, category)
 })
 
 const STATUS_LABELS = { all: 'View all', active: 'Active', completed: 'Checked' }

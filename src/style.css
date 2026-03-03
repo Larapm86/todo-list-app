@@ -996,11 +996,16 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 }
 
 .add-form__category {
-  display: flex;
+  display: none;
   align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
   margin-top: 0;
+}
+
+.add-form.add-form--tags-visible .add-form__category,
+.add-form.add-form--has-value .add-form__category {
+  display: flex;
 }
 
 .add-form__chips {
