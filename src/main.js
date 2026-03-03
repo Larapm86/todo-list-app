@@ -468,12 +468,13 @@ function renderTodos(justAdded = false, addedId = null) {
   else if (statusFilter === 'completed') toShow = toShow.filter((t) => t.completed)
   const hasTodos = todos.length > 0
   const hasMatch = toShow.length > 0
+  const showFilterRow = hasTodos || addLoading
   if (todoEmptyEl) todoEmptyEl.hidden = hasTodos
   if (todoNoMatchEl) todoNoMatchEl.hidden = !hasTodos || hasMatch
   if (filterRowEl) {
-    filterRowEl.classList.toggle('filter-row--hidden', !hasTodos)
+    filterRowEl.classList.toggle('filter-row--hidden', !showFilterRow)
     const slot = filterRowEl.closest('.filter-row-slot')
-    if (slot) slot.classList.toggle('filter-row-slot--visible', hasTodos)
+    if (slot) slot.classList.toggle('filter-row-slot--visible', showFilterRow)
   }
   if (!hasTodos) closeStatusDropdown()
   listEl.innerHTML = ''
