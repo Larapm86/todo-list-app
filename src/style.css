@@ -263,7 +263,7 @@ body {
 .theme-toggle {
   position: fixed;
   top: var(--space-lg);
-  right: var(--space-xl);
+  left: var(--space-xl);
   z-index: 10;
   display: inline-flex;
   border-radius: var(--radius-md);
@@ -318,23 +318,16 @@ html[data-theme="light"] .theme-toggle__option:hover {
   color: var(--color-text-primary);
 }
 
-/* App bar */
+/* App bar – fixed top right (Sign in / Get started) */
 .app-bar {
+  position: fixed;
+  top: var(--space-lg);
+  right: var(--space-xl);
+  z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-md);
-  margin-bottom: var(--space-lg);
-  padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--border-default);
-}
-
-.app-bar__title {
-  margin: 0;
-  font-size: var(--text-xl);
-  font-weight: var(--font-semibold);
-  letter-spacing: -0.02em;
-  line-height: var(--leading-tight);
 }
 
 .app-bar__user {
@@ -578,6 +571,14 @@ html[data-theme="light"] .theme-toggle__option:hover {
   padding-right: 2.75rem;
 }
 
+/* Hide browser’s built-in key/reveal icon so only our eye icon shows */
+.auth-input--password::-ms-reveal {
+  display: none;
+}
+.auth-input--password::-ms-clear {
+  display: none;
+}
+
 .auth-password-toggle {
   position: absolute;
   top: 0;
@@ -701,11 +702,26 @@ html[data-theme="light"] .theme-toggle__option:hover {
   display: none;
 }
 
-/* Main content */
+/* Main content – padding so fixed top bar doesn’t overlap */
 .main {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+  padding-top: 3.5rem;
+}
+
+/* Brand header – centered title */
+.brand-header {
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+.brand-header__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
 }
 
 /* Add block */
@@ -1002,7 +1018,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   transition: color 0.15s ease, background 0.15s ease;
 }
 .status-dropdown__option:hover {
@@ -1113,7 +1129,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);
   box-shadow: none;
-  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.2s ease, transform 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.28s ease-out, transform 0.28s ease-out;
 }
 
 .todo-item:hover,
@@ -1132,18 +1148,24 @@ html[data-theme="light"] .theme-toggle__option:hover {
 }
 
 .todo-item.todo-item--adding {
-  animation: fadeIn 0.3s ease;
+  animation: todoAddIn 0.4s ease-out forwards;
 }
 
 .todo-item.todo-item--removing {
   opacity: 0;
-  transform: translateX(-12px);
+  transform: translateX(-24px);
   pointer-events: none;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes todoAddIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Top row: checkbox (centered in card) + title */

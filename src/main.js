@@ -335,7 +335,7 @@ function deleteTodo(id) {
     setTimeout(() => {
       todos = todos.filter((t) => t.id !== id)
       renderTodos()
-    }, 200)
+    }, 300)
   } else {
     todos = todos.filter((t) => t.id !== id)
     renderTodos()
@@ -419,7 +419,7 @@ function renderTodos(justAdded = false, addedId = null) {
   }
   setTimeout(() => {
     listEl.querySelectorAll('.todo-item--adding').forEach((el) => el.classList.remove('todo-item--adding'))
-  }, 300)
+  }, 450)
 }
 
 form?.addEventListener('submit', (e) => {
