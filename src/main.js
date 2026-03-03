@@ -121,7 +121,7 @@ todoChipsAdd?.forEach((btn) => {
   btn.addEventListener('click', (e) => {
     e.preventDefault()
     e.stopPropagation()
-    const cat = btn.dataset.category ?? 'general'
+    const cat = btn.dataset.category ?? 'work'
     state.setSelectedCategoryForNew(cat)
     todoChipsAdd.forEach((b) =>
       b.classList.toggle('chip--active', (b.dataset.category ?? '') === cat)
@@ -133,7 +133,7 @@ form?.addEventListener('submit', (e) => {
   e.preventDefault()
   clearTodoError()
   const value = input.value
-  const category = state.selectedCategoryForNew || 'general'
+  const category = state.selectedCategoryForNew || 'work'
   input.value = ''
   updateAddFormHasValue()
   setRandomPlaceholder()
@@ -453,7 +453,7 @@ function closeFloatingAddPanel() {
 }
 
 function syncFloatingPanelChipsToState() {
-  const category = state.selectedCategoryForNew || 'general'
+  const category = state.selectedCategoryForNew || 'work'
   floatingAddPanelEl?.querySelectorAll('.add-form__chips .chip').forEach((btn) => {
     btn.classList.toggle('chip--active', (btn.dataset.category ?? '') === category)
   })
@@ -466,7 +466,7 @@ floatingAddBtnEl?.addEventListener('click', () => {
 floatingAddPanelEl?.querySelectorAll('.add-form__chips .chip').forEach((btn) => {
   btn.addEventListener('click', (e) => {
     e.preventDefault()
-    const cat = btn.dataset.category ?? 'general'
+    const cat = btn.dataset.category ?? 'work'
     state.setSelectedCategoryForNew(cat)
     floatingAddPanelEl?.querySelectorAll('.add-form__chips .chip').forEach((b) => {
       b.classList.toggle('chip--active', (b.dataset.category ?? '') === cat)
@@ -483,7 +483,7 @@ floatingAddFormEl?.addEventListener('submit', async (e) => {
     floatingAddInputEl?.classList.add('add-form__input--error')
     return
   }
-  const category = state.selectedCategoryForNew || 'general'
+  const category = state.selectedCategoryForNew || 'work'
   clearTodoError()
   floatingAddErrorEl?.setAttribute('hidden', '')
   floatingAddInputEl?.classList.remove('add-form__input--error')

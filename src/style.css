@@ -66,8 +66,6 @@
   --focus-ring-light: 0 0 0 1px rgba(120, 120, 120, 0.35);
 
   /* One color per category (pill, filter, chips) */
-  --category-general: #64748b;
-  --category-general-text: #fff;
   --category-work: #2383e2;
   --category-work-text: #fff;
   --category-personal: #0f7b6c;
@@ -217,7 +215,6 @@ html[data-theme="light"] .todo-item:focus-within {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: rgba(0, 0, 0, 0.14);
 }
-html[data-theme="light"] .todo-item--general { background-color: color-mix(in srgb, var(--card-bg) 95%, #64748b); }
 html[data-theme="light"] .todo-item--work { background-color: color-mix(in srgb, var(--card-bg) 92%, #2383e2); }
 html[data-theme="light"] .todo-item--personal { background-color: color-mix(in srgb, var(--card-bg) 92%, #22c55e); }
 html[data-theme="light"] .todo-item--errands { background-color: color-mix(in srgb, var(--card-bg) 92%, #f59e0b); }
@@ -229,10 +226,6 @@ html[data-theme="light"] .todo-item__checkbox:focus-visible {
 }
 
 /* Light theme: more accessible tag contrast (stronger backgrounds, white text) */
-html[data-theme="light"] .todo-item__category--general {
-  background: color-mix(in srgb, #e2e6ed 35%, #64748b);
-  color: #fff;
-}
 html[data-theme="light"] .todo-item__category--work {
   background: color-mix(in srgb, #e2e6ed 35%, #2383e2);
   color: #fff;
@@ -247,10 +240,6 @@ html[data-theme="light"] .todo-item__category--errands {
 }
 
 /* Light theme: category option buttons when changing tag on card (same as pill for visibility) */
-html[data-theme="light"] .todo-item__category-option--general {
-  background: color-mix(in srgb, #e2e6ed 35%, #64748b);
-  color: #fff;
-}
 html[data-theme="light"] .todo-item__category-option--work {
   background: color-mix(in srgb, #e2e6ed 35%, #2383e2);
   color: #fff;
@@ -1535,11 +1524,6 @@ html[data-theme="light"] .chip:focus-visible {
 }
 
 /* Light theme: selected chip must use category colors (override base .chip so active state wins) */
-html[data-theme="light"] .chip[data-category="general"].chip--active {
-  background: color-mix(in srgb, #e2e6ed 35%, #64748b);
-  color: #fff;
-  border-color: #64748b;
-}
 html[data-theme="light"] .chip[data-category="work"].chip--active {
   background: color-mix(in srgb, #e2e6ed 35%, #2383e2);
   color: #fff;
@@ -1557,11 +1541,6 @@ html[data-theme="light"] .chip[data-category="errands"].chip--active {
 }
 
 /* Category chip active state – one color per category */
-.chip[data-category="general"].chip--active {
-  border-color: var(--category-general);
-  color: var(--category-general-text);
-  background: var(--category-general);
-}
 .chip[data-category="work"].chip--active {
   border-color: var(--category-work);
   color: var(--category-work-text);
@@ -1820,7 +1799,6 @@ html[data-theme="light"] .filter-btn:focus-visible {
   .chip:hover {
     background: rgba(255, 255, 255, 0.08);
   }
-  .chip[data-category="general"].chip--active { background: var(--category-general); color: var(--category-general-text); border-color: var(--category-general); }
   .chip[data-category="work"].chip--active { background: var(--category-work); color: var(--category-work-text); border-color: var(--category-work); }
   .chip[data-category="personal"].chip--active { background: var(--category-personal); color: var(--category-personal-text); border-color: var(--category-personal); }
   .chip[data-category="errands"].chip--active { background: var(--category-errands); color: var(--category-errands-text); border-color: var(--category-errands); }
@@ -1828,11 +1806,9 @@ html[data-theme="light"] .filter-btn:focus-visible {
   .filter-btn:hover { color: var(--color-text-primary); background: var(--bg-hover); }
   .filter-btn.filter-btn--active { border-color: var(--border-default); color: var(--color-text-primary); background: var(--bg-hover); }
   .todo-item__category { background: var(--tag-bg); color: var(--tag-text); }
-  .todo-item__category--general { background: color-mix(in srgb, var(--tag-bg) 75%, #64748b); color: var(--category-general-text); }
   .todo-item__category--work { background: color-mix(in srgb, var(--tag-bg) 75%, #2383e2); color: var(--category-work-text); }
   .todo-item__category--personal { background: color-mix(in srgb, var(--tag-bg) 75%, #0f7b6c); color: var(--category-personal-text); }
   .todo-item__category--errands { background: color-mix(in srgb, var(--tag-bg) 75%, #c4901e); color: var(--category-errands-text); }
-  .todo-item__category-option--general { background: color-mix(in srgb, var(--tag-bg) 75%, #64748b); color: var(--category-general-text); }
   .todo-item__category-option--work { background: color-mix(in srgb, var(--tag-bg) 75%, #2383e2); color: var(--category-work-text); }
   .todo-item__category-option--personal { background: color-mix(in srgb, var(--tag-bg) 75%, #0f7b6c); color: var(--category-personal-text); }
   .todo-item__category-option--errands { background: color-mix(in srgb, var(--tag-bg) 75%, #c4901e); color: var(--category-errands-text); }
@@ -1861,13 +1837,6 @@ html[data-theme="light"] .filter-btn:focus-visible {
     border-color: var(--border-default);
     color: var(--color-text-primary);
     background: rgba(0, 0, 0, 0.06);
-  }
-  html[data-theme="light"] .todo-item__category--general,
-  html[data-theme="light"] .todo-item__category-option--general,
-  html:not([data-theme]) .todo-item__category--general,
-  html:not([data-theme]) .todo-item__category-option--general {
-    background: color-mix(in srgb, #e2e6ed 35%, #64748b);
-    color: #fff;
   }
   html[data-theme="light"] .todo-item__category--work,
   html[data-theme="light"] .todo-item__category-option--work,
@@ -2160,7 +2129,6 @@ html[data-theme="light"] .app--party .add-form__input:hover {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-.todo-item--general { background-color: color-mix(in srgb, var(--card-bg) 95%, #64748b); }
 .todo-item--work { background-color: color-mix(in srgb, var(--card-bg) 95%, #2383e2); }
 .todo-item--personal { background-color: color-mix(in srgb, var(--card-bg) 95%, #0f7b6c); }
 .todo-item--errands { background-color: color-mix(in srgb, var(--card-bg) 95%, #c4901e); }
@@ -2416,7 +2384,6 @@ html[data-theme="light"] .app--party .add-form__input:hover {
   opacity: 0.9;
 }
 
-.todo-item__category--general { background: color-mix(in srgb, var(--tag-bg) 75%, #64748b); color: var(--category-general-text); }
 .todo-item__category--work { background: color-mix(in srgb, var(--tag-bg) 75%, #2383e2); color: var(--category-work-text); }
 .todo-item__category--personal { background: color-mix(in srgb, var(--tag-bg) 75%, #0f7b6c); color: var(--category-personal-text); }
 .todo-item__category--errands { background: color-mix(in srgb, var(--tag-bg) 75%, #c4901e); color: var(--category-errands-text); }
@@ -2452,7 +2419,6 @@ html[data-theme="light"] .app--party .add-form__input:hover {
   font-family: inherit;
 }
 
-.todo-item__category-option--general { background: color-mix(in srgb, var(--tag-bg) 75%, #64748b); color: var(--category-general-text); }
 .todo-item__category-option--work { background: color-mix(in srgb, var(--tag-bg) 75%, #2383e2); color: var(--category-work-text); }
 .todo-item__category-option--personal { background: color-mix(in srgb, var(--tag-bg) 75%, #0f7b6c); color: var(--category-personal-text); }
 .todo-item__category-option--errands { background: color-mix(in srgb, var(--tag-bg) 75%, #c4901e); color: var(--category-errands-text); }
@@ -2714,7 +2680,6 @@ button {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-color: rgba(0, 0, 0, 0.14);
   }
-  html:not([data-theme]) .todo-item--general { background-color: color-mix(in srgb, var(--card-bg) 95%, #64748b); }
   html:not([data-theme]) .todo-item--work { background-color: color-mix(in srgb, var(--card-bg) 92%, #2383e2); }
   html:not([data-theme]) .todo-item--personal { background-color: color-mix(in srgb, var(--card-bg) 92%, #22c55e); }
   html:not([data-theme]) .todo-item--errands { background-color: color-mix(in srgb, var(--card-bg) 92%, #f59e0b); }
@@ -2725,11 +2690,6 @@ button {
     box-shadow: 0 0 0 1px rgba(120, 120, 120, 0.35);
   }
   /* System light: category pill and option buttons – stronger contrast */
-  html:not([data-theme]) .todo-item__category--general,
-  html:not([data-theme]) .todo-item__category-option--general {
-    background: color-mix(in srgb, #e2e6ed 35%, #64748b);
-    color: #fff;
-  }
   html:not([data-theme]) .todo-item__category--work,
   html:not([data-theme]) .todo-item__category-option--work {
     background: color-mix(in srgb, #e2e6ed 35%, #2383e2);
@@ -2755,11 +2715,6 @@ button {
   }
   html:not([data-theme]) .chip:focus-visible {
     box-shadow: var(--focus-ring-light);
-  }
-  html:not([data-theme]) .chip[data-category="general"].chip--active {
-    background: color-mix(in srgb, #e2e6ed 35%, #64748b);
-    color: #fff;
-    border-color: #64748b;
   }
   html:not([data-theme]) .chip[data-category="work"].chip--active {
     background: color-mix(in srgb, #e2e6ed 35%, #2383e2);

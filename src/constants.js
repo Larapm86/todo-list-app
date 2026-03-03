@@ -1,7 +1,6 @@
 /** App-wide constants: labels, copy, timing, and static markup */
 
 export const CATEGORY_LABELS = {
-  general: 'General',
   work: 'Work',
   personal: 'Personal',
   errands: 'Errands',

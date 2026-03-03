@@ -5,7 +5,7 @@ A simple, responsive todo list with dark/light themes, categories, and optional 
 ## Features
 
 - **Tasks**: Add, complete, and delete todos with optional undo; drag the handle to reorder (order is saved per user)
-- **Categories**: General, Work, Personal, Errands (filter by category)
+- **Categories**: Work, Personal, Errands (filter by category)
 - **Status filter**: View all, Active, or Completed
 - **Auth**: Try the app without signing in (anonymous session); sign in or create an account to sync tasks. Local-only todos are migrated to your account when you sign in.
 - **Offline / no account**: Todos added while anonymous or without Supabase stay in the list locally until you sign in (then they’re migrated) or sign out (anonymous session is restored).

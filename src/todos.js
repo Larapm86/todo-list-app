@@ -146,7 +146,7 @@ export async function loadTodos() {
           text: typeof todo.text === 'string' ? todo.text : '',
           completed: Boolean(todo.completed),
           user_id: state.currentUser.id,
-          category: typeof todo.category === 'string' ? todo.category : 'general',
+          category: typeof todo.category === 'string' ? todo.category : 'work',
           created_at,
         })
         .select('id')
@@ -180,7 +180,7 @@ export async function loadTodos() {
           : '',
     completed: Boolean(row.completed),
     created_at: row.created_at,
-    category: typeof row.category === 'string' ? row.category : 'general',
+    category: typeof row.category === 'string' ? row.category : 'work',
     position: typeof row.position === 'number' ? row.position : index,
   }))
   // Exclude DB rows we inserted for a local todo that the user then deleted during migration
@@ -240,8 +240,8 @@ function normalizePositions(todos) {
 export async function updateTodoCategory(id, category) {
   const todo = state.todos.find((t) => t.id === id)
   if (!todo) return
-  const cat = typeof category === 'string' && category ? category : 'general'
-  if ((todo.category || 'general') === cat) return
+  const cat = typeof category === 'string' && category ? category : 'work'
+  if ((todo.category || 'work') === cat) return
   if (isLocalTodoId(id)) {
     todo.category = cat
     renderTodos(false, null, false)
@@ -297,7 +297,7 @@ export async function reorderTodos(draggedId, dropTargetId) {
   }
 }
 
-export async function addTodo(taskText, category = 'general') {
+export async function addTodo(taskText, category = 'work') {
   const trimmed = typeof taskText === 'string' ? taskText.trim() : ''
   if (!trimmed) {
     input?.classList.add('add-form__input--error')
@@ -308,7 +308,7 @@ export async function addTodo(taskText, category = 'general') {
     showTodoError('Sign in is not configured.')
     return
   }
-  const cat = typeof category === 'string' && category ? category : 'general'
+  const cat = typeof category === 'string' && category ? category : 'work'
   setAddLoading(true)
   clearTodoError()
   await supabase.auth.refreshSession()
@@ -372,7 +372,7 @@ export async function addTodo(taskText, category = 'general') {
             : trimmed,
       completed: Boolean(inserted.completed),
       created_at: inserted.created_at,
-      category: typeof inserted.category === 'string' ? inserted.category : 'general',
+      category: typeof inserted.category === 'string' ? inserted.category : 'work',
       position: typeof inserted.position === 'number' ? inserted.position : nextPosition,
     }
     state.setTodos([...state.todos, newTodo])
@@ -504,7 +504,11 @@ function clearDeleteToastState() {
 
 export function renderTodos(justAdded = false, addedId = null, updateFilterRowVisibility = true) {
   let toShow = state.categoryFilter
-    ? state.todos.filter((t) => (t.category || 'general') === state.categoryFilter)
+    ? state.todos.filter((t) => {
+        const c = t.category || 'work'
+        const filter = state.categoryFilter
+        return c === filter || (c === 'general' && filter === 'work')
+      })
     : [...state.todos]
   if (state.statusFilter === 'active') toShow = toShow.filter((t) => !t.completed)
   else if (state.statusFilter === 'completed') toShow = toShow.filter((t) => t.completed)
@@ -533,10 +537,11 @@ export function renderTodos(justAdded = false, addedId = null, updateFilterRowVi
   if (!hasTodos) closeStatusDropdown()
   listEl.innerHTML = ''
   for (const todo of toShow) {
-    const cat = todo.category || 'general'
+    const cat = todo.category || 'work'
+    const displayCat = cat === 'general' ? 'work' : cat
     const li = document.createElement('li')
     li.className =
-      'todo-item todo-item--' + cat + (todo.completed ? ' todo-item--completed' : '')
+      'todo-item todo-item--' + displayCat + (todo.completed ? ' todo-item--completed' : '')
     if (justAdded && todo.id === addedId) li.classList.add('todo-item--adding')
     li.dataset.todoId = todo.id
 
@@ -574,7 +579,7 @@ export function renderTodos(justAdded = false, addedId = null, updateFilterRowVi
       const optionsWrap = document.createElement('div')
       optionsWrap.className = 'todo-item__category-options'
       const allKeys = Object.keys(CATEGORY_LABELS)
-      const orderedKeys = [cat].concat(allKeys.filter((k) => k !== cat))
+      const orderedKeys = [displayCat].concat(allKeys.filter((k) => k !== displayCat))
       for (const key of orderedKeys) {
         const opt = document.createElement('button')
         opt.type = 'button'
@@ -592,9 +597,9 @@ export function renderTodos(justAdded = false, addedId = null, updateFilterRowVi
     } else {
       const pill = document.createElement('button')
       pill.type = 'button'
-      pill.className = 'todo-item__category todo-item__category--' + cat
-      pill.setAttribute('aria-label', 'Change category. Current: ' + (CATEGORY_LABELS[cat] || cat))
-      pill.textContent = CATEGORY_LABELS[cat] || cat
+      pill.className = 'todo-item__category todo-item__category--' + displayCat
+      pill.setAttribute('aria-label', 'Change category. Current: ' + (CATEGORY_LABELS[displayCat] || displayCat))
+      pill.textContent = CATEGORY_LABELS[displayCat] || displayCat
       pill.dataset.todoId = todo.id
       footer.appendChild(pill)
     }
