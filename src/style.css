@@ -1318,10 +1318,18 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   align-self: stretch;
 }
 
+/* When empty state is shown, pull list section closer to the add-todo card */
+.list-section:has(#todo-empty:not([hidden])) {
+  margin-top: calc(-1 * var(--space-lg));
+}
+
 /* iPhone 13 (390px) and smaller: no overlap so filter tags receive touches */
 @media (max-width: 25rem) {
   .list-section {
     margin-top: 0;
+  }
+  .list-section:has(#todo-empty:not([hidden])) {
+    margin-top: calc(-1 * var(--space-lg));
   }
   .filter-row-slot.filter-row-slot--visible {
     min-height: 5.5rem;
@@ -1334,7 +1342,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 }
 
 .empty-state {
-  padding: var(--space-xl) var(--space-lg);
+  padding: var(--space-md) var(--space-lg) var(--space-xl);
   text-align: center;
   font-size: var(--text-base);
   font-weight: var(--font-normal);
