@@ -461,7 +461,7 @@ function undoDelete() {
   pendingDeleteId = null
 }
 
-function renderTodos(justAdded = false, addedId = null) {
+function renderTodos(justAdded = false, addedId = null, updateFilterRowVisibility = true) {
   let toShow = categoryFilter
     ? todos.filter((t) => (t.category || 'general') === categoryFilter)
     : [...todos]
@@ -472,7 +472,7 @@ function renderTodos(justAdded = false, addedId = null) {
   const showFilterRow = hasTodos || addLoading
   if (todoEmptyEl) todoEmptyEl.hidden = hasTodos
   if (todoNoMatchEl) todoNoMatchEl.hidden = !hasTodos || hasMatch
-  if (filterRowEl) {
+  if (updateFilterRowVisibility && filterRowEl) {
     filterRowEl.classList.toggle('filter-row--hidden', !showFilterRow)
     const slot = filterRowEl.closest('.filter-row-slot')
     if (slot) slot.classList.toggle('filter-row-slot--visible', showFilterRow)
@@ -539,6 +539,7 @@ form?.addEventListener('submit', (e) => {
 todoChipsAdd?.forEach((btn) => {
   btn.addEventListener('click', (e) => {
     e.preventDefault()
+    e.stopPropagation()
     const cat = btn.dataset.category ?? 'general'
     selectedCategoryForNew = cat
     todoChipsAdd.forEach((b) => b.classList.toggle('chip--active', (b.dataset.category ?? '') === cat))
@@ -605,7 +606,7 @@ function handleFilterButtonTap(btn) {
     const bCat = b.dataset.category ?? ''
     b.classList.toggle('filter-btn--active', (categoryFilter === '' && bCat === '') || (categoryFilter !== '' && bCat === categoryFilter))
   })
-  renderTodos()
+  renderTodos(false, null, false)
 }
 
 if (filterRowSlotEl) {

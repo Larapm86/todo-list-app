@@ -1021,6 +1021,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
+  touch-action: manipulation;
   transition: background 0.15s ease;
 }
 
@@ -1268,6 +1269,14 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   }
   .filter-bar__options {
     gap: var(--space-sm);
+  }
+  .add-form__chips .chip {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
