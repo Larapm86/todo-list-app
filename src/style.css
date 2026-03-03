@@ -1134,19 +1134,18 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   position: relative;
   z-index: 5;
   overflow: visible;
-  min-height: 2.5rem;
+  min-height: 5.5rem;
   margin-top: var(--space-lg);
   margin-bottom: 0;
   isolation: isolate;
 }
 
-/* Filter row: category (left) + status dropdown (right); shown only when there are todos */
+/* Filter row: row 1 = tag filters (scrollable), row 2 = status dropdown; shown only when there are todos */
 .filter-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
   opacity: 1;
   transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1156,22 +1155,21 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   pointer-events: none;
 }
 
-/* Filter bar (category) – ensure it receives touches on mobile above overlapping list */
+/* Filter bar (category) – single horizontal row, scrollable; receives touches on mobile above overlapping list */
 .filter-bar {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
   padding: 0;
   min-width: 0;
 }
 
-/* Status dropdown: collapsed filter on the right */
+/* Status dropdown: second row below tag filters; static, not scrollable */
 .status-dropdown {
   position: relative;
   flex-shrink: 0;
+  align-self: flex-start;
 }
 .status-dropdown__trigger {
   display: inline-flex;
@@ -1248,14 +1246,31 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 
 .filter-bar__options {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
+  flex-wrap: nowrap;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-block: var(--space-xs);
   min-width: 0;
+  scrollbar-width: thin;
+}
+.filter-bar__options::-webkit-scrollbar {
+  height: 4px;
+}
+.filter-bar__options::-webkit-scrollbar-track {
+  background: transparent;
+}
+.filter-bar__options::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 2px;
 }
 
 .filter-btn {
   position: relative;
   z-index: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-xs);
   font-weight: var(--font-medium);
@@ -1285,57 +1300,6 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   background: var(--bg-hover);
 }
 
-/* Mobile: two rows (tag filters + status), tag row horizontally scrollable, touch-friendly */
-@media (max-width: 36rem) {
-  .filter-row-slot.filter-row-slot--visible {
-    min-height: 6rem;
-  }
-  .filter-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-sm);
-  }
-  .filter-bar {
-    flex: 0 0 auto;
-  }
-  .filter-bar__options {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    gap: var(--space-sm);
-    padding-block: var(--space-xs);
-    padding-inline: 0;
-    min-height: 2.75rem;
-    align-items: center;
-    scrollbar-width: thin;
-  }
-  .filter-bar__options::-webkit-scrollbar {
-    height: 4px;
-  }
-  .filter-bar__options::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .filter-bar__options::-webkit-scrollbar-thumb {
-    background: var(--border-default);
-    border-radius: 2px;
-  }
-  .filter-btn {
-    flex-shrink: 0;
-    white-space: nowrap;
-    min-height: 2.75rem;
-    padding: var(--space-sm) var(--space-md);
-  }
-  .status-dropdown {
-    flex-shrink: 0;
-    align-self: flex-start;
-  }
-  .status-dropdown__trigger {
-    min-height: 2.75rem;
-    padding: var(--space-sm) var(--space-md);
-  }
-}
-
 /* List section – anchor at top so list grows downward, content centered; below filter row in stacking order */
 .list-section {
   position: relative;
@@ -1355,7 +1319,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
     margin-top: 0;
   }
   .filter-row-slot.filter-row-slot--visible {
-    min-height: 6rem;
+    min-height: 5.5rem;
     z-index: 10;
     isolation: isolate;
   }
