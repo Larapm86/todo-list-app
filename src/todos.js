@@ -484,7 +484,7 @@ export function dismissDeleteToast(animate = false) {
       toastEl?.style.removeProperty('left')
       toastEl?.style.removeProperty('top')
       clearDeleteToastState()
-    }, 220)
+    }, 280)
   } else {
     toastEl.setAttribute('hidden', '')
     toastEl.classList.remove('toast--lock-position')

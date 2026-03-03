@@ -23,6 +23,10 @@
   --radius-sm: 3px;
   --radius-md: 6px;
 
+  /* Shared easing for layout/UI transitions (reduces glitchy feel) */
+  --ease-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-emphasis: cubic-bezier(0.34, 1.2, 0.64, 1);
+
   /* Layout */
   --app-max-width: 40rem;
   --add-row-height: 2.5rem;
@@ -885,7 +889,7 @@ html[data-theme="light"] .drag-handle-tooltip {
   flex-direction: column;
   gap: var(--space-lg);
   padding-top: var(--nav-height);
-  transition: gap 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding-bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: gap 0.4s var(--ease-out-smooth), padding-bottom 0.4s var(--ease-out-smooth);
 }
 /* When floating menu is visible: collapse add block and brand header; filter and list sit just below nav; reserve space above bottom FAB */
 .main--with-floating-menu {
@@ -910,7 +914,7 @@ html[data-theme="light"] .drag-handle-tooltip {
   padding: 0;
   border-width: 0;
   min-height: 0;
-  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 0.4s var(--ease-out-smooth), opacity 0.4s var(--ease-out-smooth), margin 0.4s var(--ease-out-smooth), padding 0.4s var(--ease-out-smooth);
   pointer-events: none;
 }
 /* Staggered reveal when returning to zero todos: show brand (pencil) first */
@@ -947,11 +951,11 @@ html[data-theme="light"] .drag-handle-tooltip {
 }
 .brand-header {
   max-height: 10rem;
-  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 0.4s var(--ease-out-smooth), opacity 0.4s var(--ease-out-smooth), margin 0.4s var(--ease-out-smooth), padding 0.4s var(--ease-out-smooth);
 }
 .add-block {
   max-height: 32rem;
-  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 0.4s var(--ease-out-smooth), opacity 0.4s var(--ease-out-smooth), margin 0.4s var(--ease-out-smooth), padding 0.4s var(--ease-out-smooth);
 }
 
 /* Cross-off mode: hide system cursor; pencil icon hidden, slot stays for return */
@@ -1027,7 +1031,7 @@ body.app--cross-mode .brand-header__pencil-btn {
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   z-index: 100;
-  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+  transition: opacity 0.4s var(--ease-out-smooth), transform 0.4s var(--ease-out-smooth), box-shadow 0.25s var(--ease-out-smooth);
 }
 .floating-menu--hidden {
   opacity: 0;
@@ -1109,7 +1113,7 @@ html[data-theme="light"] .floating-menu__add-btn:hover {
   background: rgba(0, 0, 0, 0.4);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s var(--ease-out-smooth);
 }
 .floating-add-overlay[aria-hidden="false"] {
   pointer-events: auto;
@@ -1134,8 +1138,8 @@ html[data-theme="light"] .floating-add-overlay {
   pointer-events: none;
   opacity: 0;
   transition:
-    opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+    opacity 0.32s var(--ease-out-smooth),
+    transform 0.32s var(--ease-out-emphasis);
 }
 .floating-add-panel[aria-hidden="false"] {
   pointer-events: auto;
@@ -1555,7 +1559,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   margin-top: 0;
   margin-bottom: 0;
   overflow: hidden;
-  transition: min-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), margin 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: min-height 0.4s var(--ease-out-smooth), margin 0.4s var(--ease-out-smooth);
 }
 /* First todo added: filter row appears instantly in final position (no animation) */
 .filter-row-slot--instant-show,
@@ -1584,7 +1588,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   align-items: stretch;
   gap: var(--space-sm);
   opacity: 1;
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.4s var(--ease-out-smooth);
 }
 
 .filter-row.filter-row--hidden {
@@ -1782,7 +1786,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   justify-content: flex-start;
   align-items: center;
   align-self: stretch;
-  transition: margin-top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-top 0.4s var(--ease-out-smooth);
 }
 
 /* When empty state is shown in this slot, pull list section closer to the add-todo card */
@@ -1831,7 +1835,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 .empty-state--stagger-reveal .empty-state__text,
 .empty-state--stagger-reveal .empty-state__party {
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s var(--ease-out-smooth);
 }
 .empty-state--stagger-reveal.empty-state--reveal-text .empty-state__text {
   opacity: 1;
@@ -1970,7 +1974,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);
   box-shadow: none;
-  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.28s ease-out, transform 0.28s ease-out, max-height 0.28s ease-out, margin 0.28s ease-out, padding 0.28s ease-out;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.3s var(--ease-out-smooth), transform 0.3s var(--ease-out-smooth), max-height 0.3s var(--ease-out-smooth), margin 0.3s var(--ease-out-smooth), padding 0.3s var(--ease-out-smooth);
   transform-origin: top center;
 }
 
@@ -2314,7 +2318,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 }
 .toast--dismissing {
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s var(--ease-out-smooth);
 }
 
 @keyframes toastIn {

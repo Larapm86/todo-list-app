@@ -304,7 +304,7 @@ crossModeToggleBtn?.addEventListener('pointerenter', () => {
 })
 
 // ---- Floating menu (pencil + plus when there are todos) ----
-const FLOATING_MENU_TRANSITION_MS = 350
+const FLOATING_MENU_TRANSITION_MS = 420
 const mainEl = document.querySelector('.main')
 
 // Timeouts for staggered "zero todos" transition; cleared when user undoes or todos change
@@ -365,8 +365,8 @@ function updateFloatingMenu() {
       }
       if (todoEmptyEl) todoEmptyEl.hidden = true
       const TOAST_DURATION_MS = 1200
-      const TOAST_DISMISS_MS = 220
-      const REVEAL_AFTER_TOAST_MS = TOAST_DISMISS_MS + 20 // start main screen after toast is gone (smooth, no overlap)
+      const TOAST_DISMISS_MS = 280
+      const REVEAL_AFTER_TOAST_MS = TOAST_DISMISS_MS + 40
       const BRAND_DELAY_MS = 40
       const ADD_BLOCK_DELAY_MS = 30
       const EMPTY_TEXT_DELAY_MS = 30
@@ -383,13 +383,17 @@ function updateFloatingMenu() {
         brandHeaderEl.removeAttribute('aria-hidden')
         addBlockEl.removeAttribute('aria-hidden')
         requestAnimationFrame(() => {
-          mainEl.classList.add('main--reveal-brand')
+          requestAnimationFrame(() => {
+            mainEl.classList.add('main--reveal-brand')
+          })
         })
       }, revealStart)
       zeroTodoTransitionTimeouts.push(t2)
 
       const t3 = setTimeout(() => {
-        mainEl.classList.add('main--reveal-add-block')
+        requestAnimationFrame(() => {
+          mainEl.classList.add('main--reveal-add-block')
+        })
       }, revealStart + BRAND_DELAY_MS)
       zeroTodoTransitionTimeouts.push(t3)
 
@@ -397,7 +401,9 @@ function updateFloatingMenu() {
         mainEl.classList.remove('main--with-floating-menu', 'main--reveal-brand', 'main--reveal-add-block')
         if (todoEmptyEl) {
           todoEmptyEl.hidden = false
-          todoEmptyEl.classList.add('empty-state--stagger-reveal', 'empty-state--reveal-text')
+          requestAnimationFrame(() => {
+            todoEmptyEl.classList.add('empty-state--stagger-reveal', 'empty-state--reveal-text')
+          })
         }
       }, revealStart + BRAND_DELAY_MS + ADD_BLOCK_DELAY_MS)
       zeroTodoTransitionTimeouts.push(t4)
