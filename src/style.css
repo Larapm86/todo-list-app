@@ -97,7 +97,16 @@ html[data-theme="light"] button {
   background-color: #f9f9f9;
 }
 html[data-theme="light"] .auth-password-toggle,
-html[data-theme="light"] .auth-password-toggle:hover {
+html[data-theme="light"] .auth-password-toggle:hover,
+html[data-theme="light"] .app-bar__login,
+html[data-theme="light"] .app-bar__login:hover,
+html[data-theme="light"] .app-bar__logout,
+html[data-theme="light"] .app-bar__logout:hover,
+html[data-theme="light"] .app-bar__signup,
+html[data-theme="light"] .app-bar__signup:hover,
+html[data-theme="light"] .app-bar__signup:active,
+html[data-theme="light"] .auth-form__switch,
+html[data-theme="light"] .auth-form__switch:hover {
   background-color: transparent;
 }
 html[data-theme="light"] .add-form__input {
@@ -173,16 +182,11 @@ html[data-theme="light"] .app-bar__initial {
   border-color: rgba(0, 0, 0, 0.08);
 }
 html[data-theme="light"] .app-bar__signup {
-  background: transparent;
   border-color: rgba(0, 0, 0, 0.1);
   color: inherit;
 }
 html[data-theme="light"] .app-bar__signup:hover {
-  background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.15);
-}
-html[data-theme="light"] .app-bar__signup:active {
-  background: rgba(0, 0, 0, 0.06);
 }
 html[data-theme="light"] .add-block {
   background: rgba(0, 0, 0, 0.04);
@@ -223,6 +227,24 @@ html[data-theme="light"] .todo-item__category--personal {
   color: #fff;
 }
 html[data-theme="light"] .todo-item__category--errands {
+  background: color-mix(in srgb, #e2e6ed 30%, #c4901e);
+  color: #fff;
+}
+
+/* Light theme: category option buttons when changing tag on card (same as pill for visibility) */
+html[data-theme="light"] .todo-item__category-option--general {
+  background: color-mix(in srgb, #e2e6ed 35%, #64748b);
+  color: #fff;
+}
+html[data-theme="light"] .todo-item__category-option--work {
+  background: color-mix(in srgb, #e2e6ed 35%, #2383e2);
+  color: #fff;
+}
+html[data-theme="light"] .todo-item__category-option--personal {
+  background: color-mix(in srgb, #e2e6ed 35%, #0f7b6c);
+  color: #fff;
+}
+html[data-theme="light"] .todo-item__category-option--errands {
   background: color-mix(in srgb, #e2e6ed 30%, #c4901e);
   color: #fff;
 }
@@ -373,7 +395,21 @@ html[data-theme="light"] .theme-toggle__option:hover {
 .app-bar__logout {
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.app-bar__logout:hover {
+  color: var(--color-text-primary);
+}
+
+.app-bar__logout:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .app-bar__cta {
@@ -906,6 +942,22 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   .add-form__input::placeholder {
     white-space: nowrap;
   }
+  /* Reserve space for category row so layout doesn't jump when focusing/typing */
+  .add-form__category {
+    display: flex;
+    min-height: 2.5rem;
+    visibility: hidden;
+    opacity: 0;
+  }
+  .add-form.add-form--tags-visible .add-form__category,
+  .add-form.add-form--has-value .add-form__category {
+    visibility: visible;
+    opacity: 1;
+  }
+  /* Avoid visible jump when filter slot appears on load or when first todo appears */
+  .filter-row-slot {
+    transition: none;
+  }
 }
 
 .add-form__input:focus {
@@ -1139,7 +1191,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   position: relative;
   z-index: 5;
   overflow: visible;
-  min-height: 5.5rem;
+  min-height: 0;
   margin-top: var(--space-lg);
   margin-bottom: 0;
   isolation: isolate;
@@ -1305,13 +1357,34 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   background: var(--bg-hover);
 }
 
+/* Desktop: tag filters and status filter in a single horizontal row */
+@media (min-width: 40rem) {
+  .filter-row {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: nowrap;
+  }
+  .filter-bar {
+    flex: 1;
+    min-width: 0;
+  }
+  .filter-bar__options {
+    flex-wrap: nowrap;
+  }
+  .status-dropdown {
+    flex-shrink: 0;
+    align-self: center;
+  }
+}
+
 /* List section – anchor at top so list grows downward, content centered; below filter row in stacking order */
 .list-section {
   position: relative;
   z-index: 0;
   min-height: 5rem;
   padding: 0;
-  margin-top: calc(-1 * var(--space-sm));
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1332,7 +1405,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
     margin-top: calc(-1 * var(--space-lg));
   }
   .filter-row-slot.filter-row-slot--visible {
-    min-height: 5.5rem;
+    min-height: 0;
     z-index: 10;
     isolation: isolate;
   }
@@ -1564,7 +1637,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 }
 
 .todo-item__checkbox:hover {
-  color: var(--accent);
+  color: var(--color-text-primary);
 }
 
 .todo-item__checkbox[aria-checked='true'] {
@@ -1658,6 +1731,11 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   height: 1.125rem;
 }
 
+.todo-item__delete svg,
+.todo-item__delete svg * {
+  fill: none;
+}
+
 /* Tag row: aligned with title, no divider – metadata under main content */
 .todo-item__footer {
   display: flex;
@@ -1668,7 +1746,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   padding-left: calc(1.375rem + var(--space-md));
 }
 
-/* Tag pill – same size as add-form category chips */
+/* Tag pill – same size as add-form category chips; button reset */
 .todo-item__category {
   display: inline-flex;
   align-items: center;
@@ -1681,12 +1759,59 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   letter-spacing: 0.01em;
   background: var(--tag-bg);
   color: var(--tag-text);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.todo-item__category:hover {
+  opacity: 0.9;
 }
 
 .todo-item__category--general { background: color-mix(in srgb, var(--tag-bg) 75%, #64748b); color: var(--category-general-text); }
 .todo-item__category--work { background: color-mix(in srgb, var(--tag-bg) 75%, #2383e2); color: var(--category-work-text); }
 .todo-item__category--personal { background: color-mix(in srgb, var(--tag-bg) 75%, #0f7b6c); color: var(--category-personal-text); }
 .todo-item__category--errands { background: color-mix(in srgb, var(--tag-bg) 75%, #c4901e); color: var(--category-errands-text); }
+
+/* Category options when editing tag on card */
+.todo-item__category-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.todo-item__category-options--visible {
+  opacity: 1;
+}
+
+.todo-item__category-options--closing {
+  opacity: 0;
+}
+
+.todo-item__category-option {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: 10px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  line-height: var(--leading-tight);
+  letter-spacing: 0.01em;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.todo-item__category-option--general { background: color-mix(in srgb, var(--tag-bg) 75%, #64748b); color: var(--category-general-text); }
+.todo-item__category-option--work { background: color-mix(in srgb, var(--tag-bg) 75%, #2383e2); color: var(--category-work-text); }
+.todo-item__category-option--personal { background: color-mix(in srgb, var(--tag-bg) 75%, #0f7b6c); color: var(--category-personal-text); }
+.todo-item__category-option--errands { background: color-mix(in srgb, var(--tag-bg) 75%, #c4901e); color: var(--category-errands-text); }
+
+.todo-item__category-option:hover {
+  opacity: 0.9;
+}
 
 /* Toast */
 .toast {
@@ -1807,7 +1932,16 @@ button {
     background-color: #f9f9f9;
   }
   html:not([data-theme]) .auth-password-toggle,
-  html:not([data-theme]) .auth-password-toggle:hover {
+  html:not([data-theme]) .auth-password-toggle:hover,
+  html:not([data-theme]) .app-bar__login,
+  html:not([data-theme]) .app-bar__login:hover,
+  html:not([data-theme]) .app-bar__logout,
+  html:not([data-theme]) .app-bar__logout:hover,
+  html:not([data-theme]) .app-bar__signup,
+  html:not([data-theme]) .app-bar__signup:hover,
+  html:not([data-theme]) .app-bar__signup:active,
+  html:not([data-theme]) .auth-form__switch,
+  html:not([data-theme]) .auth-form__switch:hover {
     background-color: transparent;
   }
   html:not([data-theme]) .brand-header__icon--pencil .pencil-lead {
@@ -1877,16 +2011,11 @@ button {
     border-color: rgba(0, 0, 0, 0.08);
   }
   html:not([data-theme]) .app-bar__signup {
-    background: transparent;
     border-color: rgba(0, 0, 0, 0.1);
     color: inherit;
   }
   html:not([data-theme]) .app-bar__signup:hover {
-    background: rgba(0, 0, 0, 0.04);
     border-color: rgba(0, 0, 0, 0.15);
-  }
-  html:not([data-theme]) .app-bar__signup:active {
-    background: rgba(0, 0, 0, 0.06);
   }
   html:not([data-theme]) .toast__undo {
     background: var(--accent);
@@ -1919,6 +2048,27 @@ button {
   }
   html:not([data-theme]) .todo-item__checkbox:focus-visible {
     box-shadow: 0 0 0 1px rgba(120, 120, 120, 0.35);
+  }
+  /* System light: category pill and option buttons – stronger contrast */
+  html:not([data-theme]) .todo-item__category--general,
+  html:not([data-theme]) .todo-item__category-option--general {
+    background: color-mix(in srgb, #e2e6ed 35%, #64748b);
+    color: #fff;
+  }
+  html:not([data-theme]) .todo-item__category--work,
+  html:not([data-theme]) .todo-item__category-option--work {
+    background: color-mix(in srgb, #e2e6ed 35%, #2383e2);
+    color: #fff;
+  }
+  html:not([data-theme]) .todo-item__category--personal,
+  html:not([data-theme]) .todo-item__category-option--personal {
+    background: color-mix(in srgb, #e2e6ed 35%, #0f7b6c);
+    color: #fff;
+  }
+  html:not([data-theme]) .todo-item__category--errands,
+  html:not([data-theme]) .todo-item__category-option--errands {
+    background: color-mix(in srgb, #e2e6ed 30%, #c4901e);
+    color: #fff;
   }
 }
 
