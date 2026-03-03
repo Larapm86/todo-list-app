@@ -1193,6 +1193,50 @@ html[data-theme="light"] .floating-add-panel > .floating-add-panel__inner {
   display: flex;
 }
 
+/* Mobile: floating add panel as bottom sheet (slide up from bottom) */
+@media (max-width: 39.9999rem) {
+  .floating-add-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    transform: translateY(100%);
+    transform-origin: 50% 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+    transition:
+      opacity 0.3s var(--ease-out-smooth),
+      transform 0.35s var(--ease-out-emphasis);
+  }
+  .floating-add-panel[aria-hidden="false"] {
+    transform: translateY(0);
+  }
+  .floating-add-panel[aria-hidden="true"] {
+    transform: translateY(100%);
+  }
+  .floating-add-panel > .floating-add-panel__inner {
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    max-height: min(calc(90vh - env(safe-area-inset-bottom, 0px)), 28rem);
+    padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom, 0px));
+    position: relative;
+  }
+  /* Bottom sheet drag handle */
+  .floating-add-panel > .floating-add-panel__inner::before {
+    content: '';
+    display: block;
+    width: 2.5rem;
+    height: 4px;
+    margin: var(--space-sm) auto var(--space-md);
+    background: var(--border-default);
+    border-radius: 2px;
+  }
+}
+
 /* Brand header – pixel pencil only */
 .brand-header {
   text-align: center;
