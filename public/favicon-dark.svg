@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Pencil (dark theme: light stroke for dark tab bar) -->
+  <path d="M8 24l2-2 10-10 2 2-10 10-2 2-2-2z"/>
+  <path d="M20 12l2-2 4-4 2 2-4 4-2 2-2-2z"/>
+</svg>
