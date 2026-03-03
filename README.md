@@ -6,8 +6,9 @@ A simple, responsive todo list with dark/light themes, categories, and optional 
 
 - **Tasks**: Add, complete, and delete todos with optional undo
 - **Categories**: General, Work, Personal, Errands (filter by category)
-- **Status filter**: View all, Active, or Checked
-- **Auth**: Sign in / Get started (Supabase Auth) — sign in to sync tasks to your account
+- **Status filter**: View all, Active, or Completed
+- **Auth**: Try the app without signing in (anonymous session); sign in or create an account to sync tasks. Local-only todos are migrated to your account when you sign in.
+- **Offline / no account**: Todos added while anonymous or without Supabase stay in the list locally until you sign in (then they’re migrated) or sign out (anonymous session is restored).
 - **Theme**: Dark and light mode toggle (persisted in `localStorage`)
 - **Animations**: Smooth add/remove transitions; list grows from top center
 
@@ -60,9 +61,15 @@ A simple, responsive todo list with dark/light themes, categories, and optional 
 ## Project structure
 
 - `index.html` — entry HTML and app shell
-- `src/main.js` — app logic, UI, and Supabase calls
-- `src/style.css` — styles and theme
+- `src/main.js` — init, auth listener, and wiring
+- `src/todos.js` — todo CRUD, list render, session and migration logic
+- `src/auth.js` — auth UI (modal, tooltip, sign in/up)
+- `src/state.js` — mutable app state (todos, user, filters, etc.)
+- `src/dom.js` — DOM element references
 - `src/supabase.js` — Supabase client (reads `VITE_SUPABASE_*` from env)
+- `src/style.css` — styles and theme
+- `src/theme.js` — dark/light theme and favicon
+- `src/constants.js`, `src/ui.js`, `src/dropdown.js`, `src/confetti.js` — shared UI and helpers
 
 ## License
 
