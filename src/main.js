@@ -29,6 +29,7 @@ import {
   authSignupPassword,
   authSignOut,
   toastUndo,
+  dragHandleTooltip,
 } from './dom.js'
 import { initTheme } from './theme.js'
 import * as auth from './auth.js'
@@ -222,6 +223,48 @@ listEl?.addEventListener('click', (e) => {
 })
 
 emptyStatePartyBtn?.addEventListener('click', () => runEmptyStateCelebration())
+
+// ---- Drag handle tooltip ----
+let dragHandleTooltipShowTimeout = null
+function showDragHandleTooltip(handle) {
+  if (!dragHandleTooltip || !handle) return
+  const rect = handle.getBoundingClientRect()
+  dragHandleTooltip.style.left = `${rect.left + rect.width / 2}px`
+  dragHandleTooltip.style.top = `${rect.bottom + 6}px`
+  dragHandleTooltip.style.transform = 'translateX(-50%)'
+  dragHandleTooltip.removeAttribute('hidden')
+}
+function hideDragHandleTooltip() {
+  if (dragHandleTooltipShowTimeout) {
+    clearTimeout(dragHandleTooltipShowTimeout)
+    dragHandleTooltipShowTimeout = null
+  }
+  dragHandleTooltip?.setAttribute('hidden', '')
+}
+document.addEventListener('mouseenter', (e) => {
+  const handle = e.target.closest?.('.todo-item__drag-handle')
+  if (!handle) return
+  dragHandleTooltipShowTimeout = setTimeout(() => showDragHandleTooltip(handle), 400)
+}, true)
+document.addEventListener('mouseleave', (e) => {
+  const handle = e.target.closest?.('.todo-item__drag-handle')
+  if (handle) {
+    hideDragHandleTooltip()
+  }
+}, true)
+document.addEventListener('focusin', (e) => {
+  const handle = e.target.closest?.('.todo-item__drag-handle')
+  if (handle) {
+    if (dragHandleTooltipShowTimeout) clearTimeout(dragHandleTooltipShowTimeout)
+    dragHandleTooltipShowTimeout = setTimeout(() => showDragHandleTooltip(handle), 300)
+  }
+})
+document.addEventListener('focusout', () => {
+  hideDragHandleTooltip()
+})
+document.addEventListener('pointerdown', (e) => {
+  if (e.target.closest?.('.todo-item__drag-handle')) hideDragHandleTooltip()
+})
 
 authOpenLogin?.addEventListener('click', () => auth.openAuthModal('signin'))
 authOpenSignup?.addEventListener('click', () => auth.openAuthModal('signup'))

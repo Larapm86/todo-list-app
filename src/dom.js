@@ -26,6 +26,7 @@ export const authModalHint = document.getElementById('auth-modal-hint')
 export const authSwitchToSignup = document.getElementById('auth-switch-to-signup')
 export const authSwitchToSignin = document.getElementById('auth-switch-to-signin')
 export const authTooltip = document.getElementById('auth-tooltip')
+export const dragHandleTooltip = document.getElementById('drag-handle-tooltip')
 
 export const todoErrorEl = document.getElementById('todo-error')
 export const todoEmptyEl = document.getElementById('todo-empty')
