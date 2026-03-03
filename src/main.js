@@ -599,6 +599,7 @@ statusDropdownPanel?.addEventListener('click', (e) => e.stopPropagation())
 todoFilterButtons?.forEach((btn) => {
   btn.addEventListener('click', (e) => {
     e.preventDefault()
+    e.stopPropagation()
     categoryFilter = btn.dataset.category ?? ''
     todoFilterButtons.forEach((b) => {
       const bCat = b.dataset.category ?? ''
