@@ -879,18 +879,96 @@ html[data-theme="light"] .drag-handle-tooltip {
   padding-top: 3.5rem;
 }
 
+/* Cross-off mode: hide system cursor; pencil icon hidden, slot stays for return */
+.app--cross-mode,
+.app--cross-mode *,
+body.app--cross-mode,
+body.app--cross-mode * {
+  cursor: none;
+}
+.app--cross-mode .brand-header__pencil-btn,
+body.app--cross-mode .brand-header__pencil-btn {
+  cursor: default;
+}
+
+/* Following pencil (replaces cursor in cross-off mode so it works in all browsers) */
+.cursor-pencil {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 2rem;
+  height: 2.75rem;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -85%);
+  color: var(--color-text-muted);
+}
+.cursor-pencil[hidden] {
+  display: none !important;
+}
+.cursor-pencil .brand-header__icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  color: currentColor;
+}
+.cursor-pencil .brand-header__icon--pencil {
+  transform: rotate(-45deg);
+}
+.cursor-pencil .brand-header__icon--pencil svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.app--cross-mode .brand-header__pencil-btn .brand-header__icon {
+  visibility: hidden;
+}
+.app--cross-mode .brand-header__pencil-btn {
+  outline: 1px dashed var(--color-text-muted);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
+}
+.brand-header__pencil-btn {
+  min-width: 2.5rem;
+  min-height: 2.75rem;
+}
+
 /* Brand header – pixel pencil only */
 .brand-header {
   text-align: center;
   margin-bottom: var(--space-xl);
   overflow: visible;
 }
+.brand-header__pencil-btn {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: inherit;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.brand-header__pencil-btn:hover {
+  color: var(--color-text-primary);
+}
+.brand-header__pencil-btn[aria-pressed="true"] {
+  color: var(--accent);
+}
+.brand-header__pencil-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
 .brand-header__icon {
   display: block;
   margin: 0 auto;
   height: 2.75rem;
   width: 1rem;
-  color: var(--color-text-muted);
+  color: currentColor;
   overflow: visible;
 }
 .brand-header__icon svg {

@@ -30,6 +30,9 @@ import {
   authSignOut,
   toastUndo,
   dragHandleTooltip,
+  crossModeToggleBtn,
+  appEl,
+  cursorPencilEl,
 } from './dom.js'
 import { initTheme } from './theme.js'
 import * as auth from './auth.js'
@@ -174,7 +177,23 @@ if (filterRowSlotEl) {
   })
 }
 
+// Cross-off mode: clicking a todo marks it completed; other interactions disabled
 listEl?.addEventListener('click', (e) => {
+  if (state.crossMode) {
+    const item = e.target.closest('.todo-item')
+    if (item) {
+      e.preventDefault()
+      e.stopPropagation()
+      const id = item.dataset.todoId
+      const t = state.todos.find((x) => x.id === id)
+      if (t && !t.completed) todos.toggleTodo(id)
+    }
+    return
+  }
+})
+
+listEl?.addEventListener('click', (e) => {
+  if (state.crossMode) return
   const cb = e.target.closest('.todo-item__checkbox')
   if (cb && cb.getAttribute('role') === 'checkbox') {
     e.preventDefault()
@@ -184,6 +203,7 @@ listEl?.addEventListener('click', (e) => {
 })
 
 listEl?.addEventListener('click', (e) => {
+  if (state.crossMode) return
   if (e.target.closest('.todo-item__delete')) {
     const id = e.target.closest('.todo-item').dataset.todoId
     todos.deleteTodo(id)
@@ -191,6 +211,7 @@ listEl?.addEventListener('click', (e) => {
 })
 
 listEl?.addEventListener('click', (e) => {
+  if (state.crossMode) return
   const pill = e.target.closest('.todo-item__category')
   if (pill && pill.dataset.todoId) {
     e.preventDefault()
@@ -200,6 +221,7 @@ listEl?.addEventListener('click', (e) => {
 })
 
 listEl?.addEventListener('click', (e) => {
+  if (state.crossMode) return
   const opt = e.target.closest('.todo-item__category-option')
   if (!opt) return
   e.preventDefault()
@@ -223,6 +245,90 @@ listEl?.addEventListener('click', (e) => {
 })
 
 emptyStatePartyBtn?.addEventListener('click', () => runEmptyStateCelebration())
+
+// ---- Cross-off mode (pick up / return pencil) ----
+let cursorPencilMove = null
+function updateCrossModeUI() {
+  const on = state.crossMode
+  crossModeToggleBtn?.setAttribute('aria-pressed', on ? 'true' : 'false')
+  appEl?.classList.toggle('app--cross-mode', on)
+  document.body.classList.toggle('app--cross-mode', on)
+  if (on && cursorPencilEl) {
+    const source = document.querySelector('.brand-header__icon--pencil')
+    if (source) {
+      cursorPencilEl.innerHTML = ''
+      cursorPencilEl.appendChild(source.cloneNode(true))
+      cursorPencilEl.removeAttribute('hidden')
+    }
+    cursorPencilMove = (e) => {
+      cursorPencilEl.style.left = e.clientX + 'px'
+      cursorPencilEl.style.top = e.clientY + 'px'
+    }
+    document.addEventListener('pointermove', cursorPencilMove)
+  } else {
+    if (cursorPencilMove) {
+      document.removeEventListener('pointermove', cursorPencilMove)
+      cursorPencilMove = null
+    }
+    cursorPencilEl?.setAttribute('hidden', '')
+    cursorPencilEl && (cursorPencilEl.innerHTML = '')
+  }
+}
+// Pick up pencil: tap to hide icon and show following pencil
+crossModeToggleBtn?.addEventListener('click', (e) => {
+  if (state.crossMode) return
+  state.setCrossMode(true)
+  updateCrossModeUI()
+  if (cursorPencilEl && e.clientX != null) {
+    cursorPencilEl.style.left = e.clientX + 'px'
+    cursorPencilEl.style.top = e.clientY + 'px'
+  }
+})
+// Return pencil: move back over the empty slot to restore icon and exit cross mode
+crossModeToggleBtn?.addEventListener('pointerenter', () => {
+  if (!state.crossMode) return
+  state.setCrossMode(false)
+  updateCrossModeUI()
+})
+
+// Drag-to-cross: while pointer down in cross mode, entering a todo marks it completed
+let crossDragActive = false
+let crossDragCrossedIds = null
+listEl?.addEventListener('pointerdown', (e) => {
+  if (!state.crossMode || e.button !== 0) return
+  crossDragActive = true
+  crossDragCrossedIds = new Set()
+  const item = e.target.closest('.todo-item')
+  if (item) {
+    const id = item.dataset.todoId
+    const t = state.todos.find((x) => x.id === id)
+    if (t && !t.completed) {
+      crossDragCrossedIds.add(id)
+      todos.toggleTodo(id)
+    }
+  }
+})
+document.addEventListener('pointermove', (e) => {
+  if (!crossDragActive || !state.crossMode || !listEl) return
+  const el = document.elementFromPoint(e.clientX, e.clientY)
+  const item = el?.closest('.todo-item')
+  if (!item) return
+  const id = item.dataset.todoId
+  if (!id || crossDragCrossedIds.has(id)) return
+  const t = state.todos.find((x) => x.id === id)
+  if (t && !t.completed) {
+    crossDragCrossedIds.add(id)
+    todos.toggleTodo(id)
+  }
+})
+document.addEventListener('pointerup', () => {
+  crossDragActive = false
+  crossDragCrossedIds = null
+})
+document.addEventListener('pointercancel', () => {
+  crossDragActive = false
+  crossDragCrossedIds = null
+})
 
 // ---- Drag handle tooltip ----
 let dragHandleTooltipShowTimeout = null

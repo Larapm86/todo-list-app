@@ -22,6 +22,9 @@ export let addFormBlurTimeout = null
 // Todo card: which todo's category is being edited (pill → picker)
 export let editingCategoryTodoId = null
 
+// Cross-off mode: pencil icon toggles; clicking todos marks them completed
+export let crossMode = false
+
 export function setTodos(value) {
   todos = value
 }
@@ -80,4 +83,8 @@ export function setAddFormBlurTimeout(value) {
 
 export function setEditingCategoryTodoId(value) {
   editingCategoryTodoId = value
+}
+
+export function setCrossMode(value) {
+  crossMode = value
 }

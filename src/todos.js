@@ -26,6 +26,7 @@ function setupDragAndDropOnList() {
 }
 
 function onListPointerDown(e) {
+  if (state.crossMode) return
   const handle = e.target.closest('.todo-item__drag-handle')
   if (!handle || e.button !== 0) return
   const li = handle.closest('.todo-item')
