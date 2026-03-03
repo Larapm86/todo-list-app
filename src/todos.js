@@ -34,11 +34,53 @@ export async function ensureSession() {
 }
 
 export async function loadTodos() {
-  if (!state.currentUser || !supabase) {
+  if (!supabase) {
     state.setTodos([])
     renderTodos()
     return
   }
+  // Capture session we're loading for so we don't overwrite state if session changed (e.g. sign-out) before this call completes
+  const loadingForUserId = state.currentUser?.id ?? null
+  // No real user (e.g. offline): keep only local todos, don't query DB with a synthetic ID
+  if (!state.currentUser) {
+    state.setTodos(state.todos.filter((t) => isLocalTodoId(t.id)))
+    renderTodos()
+    return
+  }
+  const isAnonymous = state.currentUser.is_anonymous === true
+  const localTodos = state.todos.filter((t) => isLocalTodoId(t.id))
+
+  // When user just signed in (no longer anonymous), migrate their local-only todos to the DB so they aren't lost
+  const failedMigration = []
+  const insertedLocalIdToDbId = {} // track so we can exclude from merged if user deleted during migration
+  if (!isAnonymous && localTodos.length > 0) {
+    for (const todo of localTodos) {
+      if (!state.todos.some((t) => t.id === todo.id)) continue // user deleted this one during migration, skip insert
+      const created_at =
+        typeof todo.created_at === 'string' && todo.created_at
+          ? todo.created_at
+          : new Date().toISOString()
+      const { data: inserted, error: insertErr } = await supabase
+        .from('todos')
+        .insert({
+          text: typeof todo.text === 'string' ? todo.text : '',
+          completed: Boolean(todo.completed),
+          user_id: state.currentUser.id,
+          category: typeof todo.category === 'string' ? todo.category : 'general',
+          created_at,
+        })
+        .select('id')
+        .single()
+      if (insertErr) {
+        console.error('Failed to migrate local todo:', insertErr)
+        failedMigration.push(todo)
+      } else if (inserted?.id) {
+        insertedLocalIdToDbId[todo.id] = inserted.id
+      }
+    }
+  }
+  if (state.currentUser?.id !== loadingForUserId) return
+
   const { data, error } = await supabase
     .from('todos')
     .select('id, todo_text:text, completed, created_at, category')
@@ -48,25 +90,55 @@ export async function loadTodos() {
     console.error('Failed to load todos:', error)
     return
   }
-  state.setTodos(
-    (data ?? []).map((row) => ({
-      id: row.id,
-      text:
-        typeof row.todo_text === 'string'
-          ? row.todo_text
-          : typeof row.text === 'string'
-            ? row.text
-            : '',
-      completed: Boolean(row.completed),
-      created_at: row.created_at,
-      category: typeof row.category === 'string' ? row.category : 'general',
-    }))
+  let fromDb = (data ?? []).map((row) => ({
+    id: row.id,
+    text:
+      typeof row.todo_text === 'string'
+        ? row.todo_text
+        : typeof row.text === 'string'
+          ? row.text
+          : '',
+    completed: Boolean(row.completed),
+    created_at: row.created_at,
+    category: typeof row.category === 'string' ? row.category : 'general',
+  }))
+  // Exclude DB rows we inserted for a local todo that the user then deleted during migration
+  const currentLocalIds = new Set(
+    state.todos.filter((t) => isLocalTodoId(t.id)).map((t) => t.id)
   )
+  const dbIdsInsertedThenDeleted = new Set(
+    localTodos
+      .filter((t) => !currentLocalIds.has(t.id) && insertedLocalIdToDbId[t.id])
+      .map((t) => insertedLocalIdToDbId[t.id])
+  )
+  if (dbIdsInsertedThenDeleted.size > 0) {
+    fromDb = fromDb.filter((row) => !dbIdsInsertedThenDeleted.has(row.id))
+    supabase
+      .from('todos')
+      .delete()
+      .in('id', [...dbIdsInsertedThenDeleted])
+      .then(() => {})
+  }
+  // Re-read local todos after await so we don't drop items added while we were fetching (e.g. anonymous user just added a todo and onAuthStateChange triggered loadTodos)
+  const localTodosNow = state.todos.filter((t) => isLocalTodoId(t.id))
+  // Exclude successfully migrated local todos so we don't show duplicates (they're already in fromDb with DB ids)
+  const localTodosToMerge = localTodosNow.filter(
+    (t) => !insertedLocalIdToDbId[t.id]
+  )
+  const merged = [...fromDb, ...localTodosToMerge].sort(sortByCreatedAt)
+  if (state.currentUser?.id !== loadingForUserId) return // session changed (e.g. sign-out), don't overwrite
+  state.setTodos(merged)
   renderTodos()
 }
 
 export function isLocalTodoId(id) {
   return typeof id === 'string' && id.startsWith('local-')
+}
+
+function sortByCreatedAt(a, b) {
+  const ta = new Date(a?.created_at).getTime()
+  const tb = new Date(b?.created_at).getTime()
+  return (Number.isNaN(ta) ? 0 : ta) - (Number.isNaN(tb) ? 0 : tb)
 }
 
 export async function updateTodoCategory(id, category) {
@@ -111,6 +183,8 @@ export async function addTodo(taskText, category = 'general') {
   const isAnonymous = !user || user.is_anonymous
   if (isAnonymous) {
     setAddLoading(false)
+    // Only set currentUser when we have a real session user (anonymous); don't set a synthetic ID when offline (user undefined)
+    if (user) state.setCurrentUser(user)
     const localId = 'local-' + Date.now()
     const newTodo = {
       id: localId,
@@ -230,7 +304,7 @@ export function deleteTodo(id) {
 
 export function undoDelete() {
   if (!state.lastDeletedTodo) return
-  state.setTodos([...state.todos, state.lastDeletedTodo].sort((a, b) => new Date(a.created_at) - new Date(b.created_at)))
+  state.setTodos([...state.todos, state.lastDeletedTodo].sort(sortByCreatedAt))
   renderTodos()
   toastEl?.setAttribute('hidden', '')
   if (state.undoDeleteTimeout) clearTimeout(state.undoDeleteTimeout)

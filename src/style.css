@@ -24,7 +24,7 @@
   --radius-md: 6px;
 
   /* Layout */
-  --app-max-width: 28rem;
+  --app-max-width: 40rem;
   --add-row-height: 2.5rem;
 
   /* Type scale – hierarchy */
@@ -695,12 +695,27 @@ html[data-theme="light"] .theme-toggle__option:hover {
 .auth-input--password::-ms-clear {
   display: none !important;
 }
-/* Chrome / Safari: remove default password field chrome that can show key icon */
+/* Chrome / Safari: remove key/credentials icon so it doesn't sit on top of the eye toggle */
 .auth-input--password::-webkit-credentials-auto-fill-button {
   visibility: hidden;
+  display: none !important;
   pointer-events: none;
   position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
   right: -9999px;
+}
+/* Safari: strong-password / key icon */
+.auth-input--password::-webkit-strong-password-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
 
 .auth-password-toggle {
@@ -1330,24 +1345,36 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 
 .filter-bar__options {
   display: flex;
-  flex-wrap: nowrap;
   gap: var(--space-sm);
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
   padding-block: var(--space-xs);
   min-width: 0;
-  scrollbar-width: thin;
 }
-.filter-bar__options::-webkit-scrollbar {
-  height: 4px;
+
+/* Mobile: tag filters in one row (scroll if needed), status filter is already on second row via .filter-row column */
+@media (max-width: 39.9999rem) {
+  .filter-bar__options {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .filter-bar__options::-webkit-scrollbar {
+    height: 4px;
+  }
+  .filter-bar__options::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .filter-bar__options::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 2px;
+  }
 }
-.filter-bar__options::-webkit-scrollbar-track {
-  background: transparent;
-}
-.filter-bar__options::-webkit-scrollbar-thumb {
-  background: var(--border-default);
-  border-radius: 2px;
+
+/* Desktop: allow tag filters to wrap only if needed so tags + status stay in one row */
+@media (min-width: 40rem) {
+  .filter-bar__options {
+    flex-wrap: wrap;
+  }
 }
 
 .filter-btn {
@@ -1395,9 +1422,6 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   .filter-bar {
     flex: 1;
     min-width: 0;
-  }
-  .filter-bar__options {
-    flex-wrap: nowrap;
   }
   .status-dropdown {
     flex-shrink: 0;
