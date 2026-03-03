@@ -26,6 +26,7 @@
   /* Layout */
   --app-max-width: 40rem;
   --add-row-height: 2.5rem;
+  --nav-height: 3.5rem;
 
   /* Type scale – hierarchy */
   --text-xs: 0.75rem;
@@ -876,19 +877,19 @@ html[data-theme="light"] .drag-handle-tooltip {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
-  padding-top: 3.5rem;
-  transition: padding-bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1), gap 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-top: var(--nav-height);
+  transition: gap 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding-bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* When floating menu is visible: collapse add block and brand header; filter row and list sit just below nav; reserve space above FAB */
+/* When floating menu is visible: collapse add block and brand header; filter and list sit just below nav; reserve space above bottom FAB */
 .main--with-floating-menu {
-  padding-bottom: 5.5rem;
   gap: 0;
+  padding-bottom: 5.5rem;
 }
 .main--with-floating-menu .filter-row-slot {
-  margin-top: var(--space-sm);
+  margin-top: 0;
 }
 .main--with-floating-menu .filter-row-slot.filter-row-slot--visible {
-  margin-top: var(--space-sm);
+  margin-top: 0;
 }
 .main--with-floating-menu .list-section {
   margin-top: var(--space-md);
@@ -976,7 +977,7 @@ body.app--cross-mode .brand-header__pencil-btn {
   min-height: 2.75rem;
 }
 
-/* Floating menu: pencil + plus, appears when there are todos – rectangular with rounded corners */
+/* Floating menu: pencil + plus, appears when there are todos – fixed at bottom */
 .floating-menu {
   position: fixed;
   left: 50%;
@@ -1452,13 +1453,16 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 }
 
 .filter-row-slot.filter-row-slot--visible {
-  position: relative;
-  z-index: 5;
+  position: sticky;
+  top: var(--nav-height);
+  z-index: 50;
   overflow: visible;
   min-height: 0;
   margin-top: var(--space-lg);
   margin-bottom: 0;
   isolation: isolate;
+  background: var(--bg-default);
+  padding-bottom: var(--space-sm);
 }
 
 /* Filter row: row 1 = tag filters (scrollable), row 2 = status dropdown; shown only when there are todos */
@@ -1651,7 +1655,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   }
 }
 
-/* List section – anchor at top so list grows downward, content centered; below filter row in stacking order */
+/* List section – anchor at top so list grows downward (top to bottom); below filter row in stacking order */
 .list-section {
   position: relative;
   z-index: 0;
@@ -1660,6 +1664,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   margin-top: 0;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
   align-self: stretch;
   transition: margin-top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1814,7 +1819,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   display: none;
 }
 
-/* Todo list (items rendered by JS) – card layout, full width of section */
+/* Todo list (items rendered by JS) – card layout, full width; grows top to bottom (new items below existing) */
 .todo-list {
   list-style: none;
   margin: 0;
@@ -1822,6 +1827,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   width: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   gap: var(--space-sm);
 }
 
