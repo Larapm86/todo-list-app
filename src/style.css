@@ -2281,12 +2281,13 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   opacity: 0.9;
 }
 
-/* Toast – fixed at empty-state slot so it stays in the same place with 0 or 1+ todos */
+/* Toast – fixed at empty-state slot so it stays in the same place with 0 or 1+ todos; above filter/dropdown so it never gets covered */
 .toast {
   position: fixed;
   left: var(--toast-anchor-x, 50vw);
   top: var(--toast-anchor-y, 50vh);
   transform: translate(-50%, -50%);
+  z-index: 1500;
   padding: var(--space-md) var(--space-lg) var(--space-xl);
   border-radius: var(--radius-md);
   background: var(--bg-elevated);
