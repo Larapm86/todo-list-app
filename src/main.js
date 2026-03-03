@@ -351,11 +351,19 @@ function deleteTodo(id) {
   pendingDeleteId = id
   const li = listEl?.querySelector(`[data-todo-id="${id}"]`)
   if (li) {
+    const h = li.offsetHeight
+    li.style.maxHeight = h + 'px'
+    li.style.overflow = 'hidden'
     li.classList.add('todo-item--removing')
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        li.style.maxHeight = '0'
+      })
+    })
     setTimeout(() => {
       todos = todos.filter((t) => t.id !== id)
       renderTodos()
-    }, 300)
+    }, 320)
   } else {
     todos = todos.filter((t) => t.id !== id)
     renderTodos()
