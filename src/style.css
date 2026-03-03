@@ -80,6 +80,13 @@
   --tag-text: var(--color-text-muted);
 }
 
+/* Mobile: ensure top safe area so filter row and nav never overlap status bar (env() is often 0 in browser chrome) */
+@media (max-width: 39.9999rem) {
+  :root {
+    --safe-area-top: max(env(safe-area-inset-top, 0px), 2rem);
+  }
+}
+
 /* Light theme (when toggle is set to light) */
 html[data-theme="light"] {
   color-scheme: light;
