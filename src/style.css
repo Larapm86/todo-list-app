@@ -275,16 +275,12 @@ body {
   box-sizing: border-box;
 }
 
-/* Mobile: prevent horizontal overflow and layout shift (scrollbar / 100vw) */
+/* Mobile: prevent horizontal overflow and layout shift (scrollbar / 100vw). Only clip at viewport so list is not affected. */
 @media (max-width: 36rem) {
   html {
     overflow-x: hidden;
   }
   body {
-    overflow-x: hidden;
-  }
-  #app {
-    min-width: 0;
     overflow-x: hidden;
   }
 }
@@ -981,9 +977,8 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   .list-section:has(#todo-empty:not([hidden])) {
     margin-top: 0;
   }
-  /* Contain add block so category chips / input never cause horizontal scroll */
-  .add-block,
-  .main {
+  /* Contain add block so category chips / input never cause horizontal scroll (do not apply to .main or list or list items get clipped) */
+  .add-block {
     min-width: 0;
     overflow-x: hidden;
   }
