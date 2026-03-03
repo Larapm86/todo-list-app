@@ -1092,7 +1092,12 @@ body.app--cross-mode .brand-header__pencil-btn {
   display: none !important;
 }
 
-/* Mobile: hide pencil in floating menu (no cursor for cross-off mode); keep only plus button */
+/* Label beside plus: visible only on mobile */
+.floating-menu__add-label {
+  display: none;
+}
+
+/* Mobile: hide pencil in floating menu (no cursor for cross-off mode); keep only plus button + "Add todo" label */
 @media (max-width: 39.9999rem) {
   .floating-menu__pencil-slot {
     display: none;
@@ -1101,6 +1106,13 @@ body.app--cross-mode .brand-header__pencil-btn {
     width: 0;
     overflow: hidden;
     visibility: hidden;
+  }
+  .floating-menu__add-label {
+    display: inline;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+    white-space: nowrap;
   }
 }
 
