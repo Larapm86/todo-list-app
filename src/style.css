@@ -1082,6 +1082,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   min-height: 2.5rem;
   margin-top: var(--space-lg);
   margin-bottom: 0;
+  isolation: isolate;
 }
 
 /* Filter row: category (left) + status dropdown (right); shown only when there are todos */
@@ -1227,7 +1228,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   background: var(--bg-hover);
 }
 
-/* List section – anchor at top so list grows downward, content centered; sits close under filters; below filter row in stacking order */
+/* List section – anchor at top so list grows downward, content centered; below filter row in stacking order */
 .list-section {
   position: relative;
   z-index: 0;
@@ -1238,6 +1239,21 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   flex-direction: column;
   align-items: center;
   align-self: stretch;
+}
+
+/* iPhone 13 (390px) and smaller: no overlap so filter tags always receive touches */
+@media (max-width: 25rem) {
+  .list-section {
+    margin-top: 0;
+  }
+  .filter-row-slot.filter-row-slot--visible {
+    min-height: 4.5rem;
+    z-index: 10;
+    isolation: isolate;
+  }
+  .filter-row {
+    pointer-events: auto;
+  }
 }
 
 .empty-state {
