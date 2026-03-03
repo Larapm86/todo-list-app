@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
     <title>Todo List</title>
   </head>
   <body>
@@ -192,7 +193,12 @@
 
         <!-- List -->
         <section class="list-section" aria-label="Your tasks">
-          <div id="todo-empty" class="empty-state" hidden>No tasks yet. Add your first one above.</div>
+          <div id="todo-empty" class="empty-state" hidden>
+            <span class="empty-state__text">No todos on your list. Add one above, or tap the party button to boogie.</span>
+            <button type="button" class="empty-state__party" aria-label="Celebrate! You have no pending tasks" title="Celebrate">
+              <span class="material-symbols-outlined empty-state__party-icon" aria-hidden="true">celebration</span>
+            </button>
+          </div>
           <div id="todo-no-match" class="empty-state" hidden>No tasks match your filter.</div>
           <ul class="todo-list" aria-label="Todo items"></ul>
         </section>

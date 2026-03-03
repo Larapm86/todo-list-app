@@ -31,6 +31,8 @@ let authTooltipHideTimeout = null
 let authTooltipDismissListener = null
 const todoErrorEl = document.getElementById('todo-error')
 const todoEmptyEl = document.getElementById('todo-empty')
+const emptyStatePartyBtn = document.querySelector('.empty-state__party')
+const appEl = document.getElementById('app')
 const filterRowEl = document.getElementById('filter-row')
 const filterRowSlotEl = document.querySelector('.filter-row-slot')
 const todoAddBtn = document.getElementById('todo-add-btn')
@@ -104,36 +106,68 @@ const TRASH_SVG =
 const CHECKBOX_SVG =
   '<svg class="todo-item__checkbox-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline class="todo-item__checkbox-check" points="9 12 11 14 15 10"/></svg>'
 
-const CONFETTI_COLORS = ['#5b21b6', '#7c3aed', '#2383e2', '#ec4899', '#f59e0b', '#22c55e', '#06b6d4', '#e11d48']
+const CONFETTI_COLORS = ['#fde047', '#a78bfa', '#34d399', '#f472b6', '#60a5fa', '#fb923c']
+
+/** Single confetti burst (same style as party button), one-time spread from origin. */
+function runConfettiBurst(originX, originY, durationMs = 2200) {
+  const canvas = document.createElement('canvas')
+  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999;'
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
+  document.body.appendChild(canvas)
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    canvas.remove()
+    return
+  }
+  const particles = []
+  const count = 70
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5
+    const speed = 2 + Math.random() * 5
+    particles.push({
+      x: originX,
+      y: originY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      size: Math.random() * 6 + 4,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      rotation: Math.random() * 360,
+      spin: (Math.random() - 0.5) * 0.2,
+    })
+  }
+  const startTime = performance.now()
+  const stopAt = startTime + durationMs
+  const fadeStart = stopAt - 400
+
+  function tick(now) {
+    if (now >= stopAt) {
+      canvas.remove()
+      return
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    for (const p of particles) {
+      p.x += p.vx
+      p.y += p.vy
+      p.vy += 0.12
+      p.rotation += p.spin
+      ctx.save()
+      ctx.translate(p.x, p.y)
+      ctx.rotate((p.rotation * Math.PI) / 180)
+      ctx.fillStyle = p.color
+      if (now > fadeStart) ctx.globalAlpha = (stopAt - now) / 400
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size)
+      ctx.restore()
+    }
+    requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+}
 
 function showConfetti(originRect) {
-  const container = document.createElement('div')
-  container.className = 'confetti'
-  container.setAttribute('aria-hidden', 'true')
   const centerX = originRect ? originRect.left + originRect.width / 2 : window.innerWidth / 2
-  const centerY = originRect ? originRect.top + originRect.height / 2 : window.innerHeight * 0.2
-  container.style.left = centerX + 'px'
-  container.style.top = centerY + 'px'
-  const count = 55
-  for (let i = 0; i < count; i++) {
-    const piece = document.createElement('div')
-    piece.className = 'confetti__piece'
-    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5
-    const spread = 120 + Math.random() * 180
-    const endX = Math.cos(angle) * spread * (Math.random() > 0.5 ? 1 : -1)
-    const endY = 80 + Math.random() * 120
-    piece.style.setProperty('--end-x', endX + 'px')
-    piece.style.setProperty('--end-y', endY + 'px')
-    piece.style.setProperty('--delay', Math.random() * 0.25 + 's')
-    piece.style.setProperty('--duration', 1.2 + Math.random() * 0.6 + 's')
-    piece.style.setProperty('--rotation', (Math.random() - 0.5) * 540 + 'deg')
-    piece.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]
-    piece.style.width = (Math.random() > 0.5 ? 8 : 6) + 'px'
-    piece.style.height = (Math.random() > 0.5 ? 6 : 8) + 'px'
-    container.appendChild(piece)
-  }
-  document.body.appendChild(container)
-  setTimeout(() => container.remove(), 2200)
+  const centerY = originRect ? originRect.top + originRect.height / 2 : window.innerHeight * 0.3
+  runConfettiBurst(centerX, centerY, 2200)
 }
 
 let todos = []
@@ -298,6 +332,81 @@ function showAddSuccessCheck() {
     todoAddBtnCheck.hidden = true
     todoAddBtnIcon.hidden = false
   }, ADD_CHECK_DURATION_MS)
+}
+
+const CELEBRATION_DURATION_MS = 3000
+
+function runEmptyStateCelebration() {
+  if (!appEl) return
+  appEl.classList.add('app--party')
+  const stopAt = performance.now() + CELEBRATION_DURATION_MS
+
+  const canvas = document.createElement('canvas')
+  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999;'
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
+  document.body.appendChild(canvas)
+  const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    canvas.remove()
+    appEl.classList.remove('app--party')
+    return
+  }
+
+  let particles = []
+  const centerX = canvas.width / 2
+  const centerY = canvas.height * 0.35
+
+  function addBurst(originX, originY) {
+    const count = 80
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5
+      const speed = 2 + Math.random() * 5
+      particles.push({
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        size: Math.random() * 6 + 4,
+        color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+        rotation: Math.random() * 360,
+        spin: (Math.random() - 0.5) * 0.2,
+      })
+    }
+  }
+  addBurst(centerX, centerY)
+  const secondBurstAt = performance.now() + 1200
+  let secondBurstDone = false
+
+  function tick(now) {
+    if (now >= stopAt) {
+      canvas.remove()
+      appEl.classList.remove('app--party')
+      return
+    }
+    if (!secondBurstDone && now >= secondBurstAt) {
+      secondBurstDone = true
+      addBurst(centerX * 0.6, centerY)
+      addBurst(centerX * 1.4, centerY)
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    for (const p of particles) {
+      p.x += p.vx
+      p.y += p.vy
+      p.vy += 0.12
+      p.rotation += p.spin
+      ctx.save()
+      ctx.translate(p.x, p.y)
+      ctx.rotate((p.rotation * Math.PI) / 180)
+      ctx.fillStyle = p.color
+      const fadeStart = stopAt - 500
+      if (now > fadeStart) ctx.globalAlpha = (stopAt - now) / 500
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size)
+      ctx.restore()
+    }
+    requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
 }
 
 async function ensureSession() {
@@ -714,6 +823,8 @@ listEl?.addEventListener('click', (e) => {
     deleteTodo(id)
   }
 })
+
+emptyStatePartyBtn?.addEventListener('click', () => runEmptyStateCelebration())
 
 authOpenLogin?.addEventListener('click', () => openAuthModal('signin'))
 authOpenSignup?.addEventListener('click', () => openAuthModal('signup'))

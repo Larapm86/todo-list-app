@@ -1348,6 +1348,119 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   font-weight: var(--font-normal);
   color: var(--color-text-muted);
   line-height: var(--leading-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  border-radius: var(--radius-md);
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.empty-state__text {
+  display: block;
+}
+
+.empty-state__party {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  color: inherit;
+  transition: background 0.15s ease, color 0.15s ease;
+  touch-action: manipulation;
+}
+
+/* Material Symbols Outlined – celebration icon */
+.material-symbols-outlined.empty-state__party-icon {
+  font-family: 'Material Symbols Outlined';
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1.25rem;
+  line-height: 1;
+  letter-spacing: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  display: inline-block;
+  color: currentColor;
+}
+
+.empty-state__party:hover {
+  background: var(--bg-hover);
+  color: var(--color-text-primary);
+}
+
+.empty-state__party:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.empty-state__party:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Party mode: 3s – full-screen disco (confetti colors, rhythmic bounce) + list-section glow */
+#app.app--party::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  animation: disco-bounce 3s steps(20, end) forwards;
+}
+
+.app--party .list-section {
+  animation: party-glow 3s ease-in-out;
+}
+
+.app--party .empty-state {
+  color: #1a1a1a;
+}
+
+.app--party .empty-state .empty-state__party {
+  color: inherit;
+}
+
+.app--party .empty-state .empty-state__party:hover {
+  color: #1a1a1a;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+@keyframes party-glow {
+  0%, 100% { filter: brightness(1); }
+  25% { filter: brightness(1.08); }
+  50% { filter: brightness(1); }
+  75% { filter: brightness(1.05); }
+}
+
+/* Rhythmic disco: confetti colors, 20 discrete snaps over 3s (pam-pam-pam) */
+@keyframes disco-bounce {
+  0% { background: transparent; }
+  5% { background: #fde047; }
+  10% { background: #a78bfa; }
+  15% { background: #34d399; }
+  20% { background: #f472b6; }
+  25% { background: #60a5fa; }
+  30% { background: #fb923c; }
+  35% { background: #fde047; }
+  40% { background: #a78bfa; }
+  45% { background: #34d399; }
+  50% { background: #f472b6; }
+  55% { background: #60a5fa; }
+  60% { background: #fb923c; }
+  65% { background: #fde047; }
+  70% { background: #a78bfa; }
+  75% { background: #34d399; }
+  80% { background: #f472b6; }
+  85% { background: #60a5fa; }
+  90% { background: #fb923c; }
+  95% { background: #fde047; }
+  100% { background: transparent; }
 }
 
 .empty-state[hidden] {
