@@ -96,6 +96,10 @@ html[data-theme="light"] a:hover {
 html[data-theme="light"] button {
   background-color: #f9f9f9;
 }
+html[data-theme="light"] .auth-password-toggle,
+html[data-theme="light"] .auth-password-toggle:hover {
+  background-color: transparent;
+}
 html[data-theme="light"] .add-form__input {
   background-color: #f5f5f5;
 }
@@ -661,7 +665,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  background: transparent;
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -671,6 +675,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
 
 .auth-password-toggle:hover {
   color: var(--color-text-primary);
+  background: transparent;
 }
 
 .auth-password-toggle:focus-visible {
@@ -1679,6 +1684,10 @@ button {
   }
   html:not([data-theme]) button {
     background-color: #f9f9f9;
+  }
+  html:not([data-theme]) .auth-password-toggle,
+  html:not([data-theme]) .auth-password-toggle:hover {
+    background-color: transparent;
   }
   html:not([data-theme]) .brand-header__icon--pencil .pencil-lead {
     fill: #1a1a1a;
