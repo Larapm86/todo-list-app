@@ -234,6 +234,10 @@
 
         <!-- List -->
         <section class="list-section" aria-label="Your tasks">
+          <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+            <span class="toast__message"></span>
+            <button type="button" class="toast__undo">Undo</button>
+          </div>
           <div id="todo-empty" class="empty-state" hidden>
             <span class="empty-state__text">No todos on your list. Add one above, or tap the party button to boogie.</span>
             <button type="button" class="empty-state__party" aria-label="Celebrate! You have no pending tasks" title="Celebrate">
@@ -244,11 +248,6 @@
           <ul class="todo-list" aria-label="Todo items"></ul>
         </section>
       </main>
-
-      <div id="toast" class="toast" role="status" aria-live="polite" hidden>
-        <span class="toast__message"></span>
-        <button type="button" class="toast__undo">Undo</button>
-      </div>
     </div>
 
     <div id="auth-tooltip" class="auth-tooltip" role="tooltip" aria-live="polite" hidden>

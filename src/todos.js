@@ -480,11 +480,16 @@ export function dismissDeleteToast(animate = false) {
     toastEl.classList.add('toast--dismissing')
     setTimeout(() => {
       toastEl?.setAttribute('hidden', '')
-      toastEl?.classList.remove('toast--dismissing')
+      toastEl?.classList.remove('toast--dismissing', 'toast--lock-position')
+      toastEl?.style.removeProperty('left')
+      toastEl?.style.removeProperty('top')
       clearDeleteToastState()
     }, 220)
   } else {
     toastEl.setAttribute('hidden', '')
+    toastEl.classList.remove('toast--lock-position')
+    toastEl.style.removeProperty('left')
+    toastEl.style.removeProperty('top')
     clearDeleteToastState()
   }
 }

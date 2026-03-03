@@ -28,6 +28,7 @@ import {
   authSigninPassword,
   authSignupPassword,
   authSignOut,
+  toastEl,
   toastUndo,
   dragHandleTooltip,
   crossModeToggleBtn,
@@ -308,16 +309,29 @@ const mainEl = document.querySelector('.main')
 
 // Timeouts for staggered "zero todos" transition; cleared when user undoes or todos change
 let zeroTodoTransitionTimeouts = []
+// Track previous hasTodos so we only run "return to zero" transition when actually going from todos → 0 (not on initial load)
+let hadTodosBefore = false
 
 function clearZeroTodoTransition() {
   zeroTodoTransitionTimeouts.forEach((id) => clearTimeout(id))
   zeroTodoTransitionTimeouts = []
 }
 
+/** Update toast anchor to empty-state center when empty state is visible (so toast stays in same place with 0 or 1+ todos). */
+function updateToastAnchorPosition() {
+  if (!todoEmptyEl || todoEmptyEl.hidden) return
+  const r = todoEmptyEl.getBoundingClientRect()
+  const x = r.left + r.width / 2
+  const y = r.top + r.height / 2
+  document.documentElement.style.setProperty('--toast-anchor-x', `${x}px`)
+  document.documentElement.style.setProperty('--toast-anchor-y', `${y}px`)
+}
+
 function updateFloatingMenu() {
   const hasTodos = state.todos.length > 0
   if (!floatingMenuEl || !floatingMenuPencilSlotEl || !brandHeaderEl || !crossModeToggleBtn || !mainEl) return
   if (hasTodos) {
+    hadTodosBefore = true
     clearZeroTodoTransition()
     floatingMenuPencilSlotEl.appendChild(crossModeToggleBtn)
     floatingAddBtnEl?.removeAttribute('hidden')
@@ -334,55 +348,77 @@ function updateFloatingMenu() {
       addBlockEl.hidden = true
     }, FLOATING_MENU_TRANSITION_MS)
   } else {
-    // Keep "Todo deleted" visible so user can read and undo; then as toast is gone, reveal elements one by one
-    if (todoEmptyEl) todoEmptyEl.hidden = true
+    // Zero todos: minimal setup (pencil in header, menu hidden). Staggered transition only when coming from having todos.
     brandHeaderEl.appendChild(crossModeToggleBtn)
     floatingAddBtnEl?.setAttribute('hidden', '')
     floatingMenuEl.classList.add('floating-menu--hidden')
+    mainEl.classList.remove('main--with-floating-menu', 'main--reveal-brand', 'main--reveal-add-block')
 
-    const READ_TIME_MS = 1200
-    const TOAST_FADE_MS = 220
-    const BRAND_DELAY_MS = 350
-    const ADD_BLOCK_DELAY_MS = 350
-    const EMPTY_TEXT_DELAY_MS = 300
+    if (hadTodosBefore) {
+      hadTodosBefore = false
+      // Transition from todos → 0: lock toast on screen so it doesn’t move when layout changes, then dismiss and reveal
+      if (toastEl && !toastEl.hasAttribute('hidden')) {
+        const r = toastEl.getBoundingClientRect()
+        toastEl.style.left = `${r.left + r.width / 2}px`
+        toastEl.style.top = `${r.top + r.height / 2}px`
+        toastEl.classList.add('toast--lock-position')
+      }
+      if (todoEmptyEl) todoEmptyEl.hidden = true
+      const TOAST_DURATION_MS = 1200
+      const TOAST_DISMISS_MS = 220
+      const REVEAL_AFTER_TOAST_MS = TOAST_DISMISS_MS + 20 // start main screen after toast is gone (smooth, no overlap)
+      const BRAND_DELAY_MS = 40
+      const ADD_BLOCK_DELAY_MS = 30
+      const EMPTY_TEXT_DELAY_MS = 30
+      const revealStart = TOAST_DURATION_MS + REVEAL_AFTER_TOAST_MS
 
-    const t1 = setTimeout(() => {
-      todos.dismissDeleteToast?.(true)
-    }, READ_TIME_MS)
-    zeroTodoTransitionTimeouts.push(t1)
+      const t1 = setTimeout(() => {
+        todos.dismissDeleteToast?.(true)
+      }, TOAST_DURATION_MS)
+      zeroTodoTransitionTimeouts.push(t1)
 
-    const t2 = setTimeout(() => {
+      const t2 = setTimeout(() => {
+        brandHeaderEl.hidden = false
+        addBlockEl.hidden = false
+        brandHeaderEl.removeAttribute('aria-hidden')
+        addBlockEl.removeAttribute('aria-hidden')
+        requestAnimationFrame(() => {
+          mainEl.classList.add('main--reveal-brand')
+        })
+      }, revealStart)
+      zeroTodoTransitionTimeouts.push(t2)
+
+      const t3 = setTimeout(() => {
+        mainEl.classList.add('main--reveal-add-block')
+      }, revealStart + BRAND_DELAY_MS)
+      zeroTodoTransitionTimeouts.push(t3)
+
+      const t4 = setTimeout(() => {
+        mainEl.classList.remove('main--with-floating-menu', 'main--reveal-brand', 'main--reveal-add-block')
+        if (todoEmptyEl) {
+          todoEmptyEl.hidden = false
+          todoEmptyEl.classList.add('empty-state--stagger-reveal', 'empty-state--reveal-text')
+        }
+      }, revealStart + BRAND_DELAY_MS + ADD_BLOCK_DELAY_MS)
+      zeroTodoTransitionTimeouts.push(t4)
+
+      const t5 = setTimeout(() => {
+        if (todoEmptyEl) todoEmptyEl.classList.add('empty-state--reveal-party')
+        requestAnimationFrame(() => updateToastAnchorPosition())
+        clearZeroTodoTransition()
+      }, revealStart + BRAND_DELAY_MS + ADD_BLOCK_DELAY_MS + EMPTY_TEXT_DELAY_MS)
+      zeroTodoTransitionTimeouts.push(t5)
+    } else {
+      // Initial load or already at 0 todos: ensure default state (brand + add block visible, empty state shown by renderTodos / init)
       brandHeaderEl.hidden = false
       addBlockEl.hidden = false
       brandHeaderEl.removeAttribute('aria-hidden')
       addBlockEl.removeAttribute('aria-hidden')
-      requestAnimationFrame(() => {
-        mainEl.classList.add('main--reveal-brand')
-      })
-    }, READ_TIME_MS + TOAST_FADE_MS)
-    zeroTodoTransitionTimeouts.push(t2)
-
-    const t3 = setTimeout(() => {
-      mainEl.classList.add('main--reveal-add-block')
-    }, READ_TIME_MS + TOAST_FADE_MS + BRAND_DELAY_MS)
-    zeroTodoTransitionTimeouts.push(t3)
-
-    const t4 = setTimeout(() => {
-      mainEl.classList.remove('main--with-floating-menu', 'main--reveal-brand', 'main--reveal-add-block')
-      if (todoEmptyEl) {
-        todoEmptyEl.hidden = false
-        todoEmptyEl.classList.add('empty-state--stagger-reveal', 'empty-state--reveal-text')
-      }
-    }, READ_TIME_MS + TOAST_FADE_MS + BRAND_DELAY_MS + ADD_BLOCK_DELAY_MS)
-    zeroTodoTransitionTimeouts.push(t4)
-
-    const t5 = setTimeout(() => {
-      if (todoEmptyEl) todoEmptyEl.classList.add('empty-state--reveal-party')
-      clearZeroTodoTransition()
-    }, READ_TIME_MS + TOAST_FADE_MS + BRAND_DELAY_MS + ADD_BLOCK_DELAY_MS + EMPTY_TEXT_DELAY_MS)
-    zeroTodoTransitionTimeouts.push(t5)
+      requestAnimationFrame(() => updateToastAnchorPosition())
+    }
   }
 }
+window.addEventListener('resize', () => updateToastAnchorPosition())
 document.addEventListener('todos-changed', () => updateFloatingMenu())
 updateFloatingMenu()
 function openFloatingAddPanel() {
@@ -629,7 +665,10 @@ if (supabase) {
     if (!state.todos.length && todoEmptyEl) {
       todoEmptyEl.hidden = true
       setTimeout(() => {
-        if (todoEmptyEl && !state.todos.length) todoEmptyEl.hidden = false
+        if (todoEmptyEl && !state.todos.length) {
+          todoEmptyEl.hidden = false
+          requestAnimationFrame(() => updateToastAnchorPosition())
+        }
       }, 100)
     }
     if (supabase) {
