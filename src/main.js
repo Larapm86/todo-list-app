@@ -36,8 +36,35 @@ const todoFilterButtons = document.querySelectorAll('.filter-btn')
 const toastEl = document.getElementById('toast')
 const toastMessage = toastEl?.querySelector('.toast__message')
 const toastUndo = toastEl?.querySelector('.toast__undo')
+const themeDarkBtn = document.getElementById('theme-dark')
+const themeLightBtn = document.getElementById('theme-light')
 
 const CATEGORY_LABELS = { general: 'General', work: 'Work', personal: 'Personal', errands: 'Errands' }
+
+const THEME_STORAGE_KEY = 'todo-theme'
+function getPreferredTheme() {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY)
+  if (stored === 'light' || stored === 'dark') return stored
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+}
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme
+  if (themeDarkBtn) themeDarkBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false')
+  if (themeLightBtn) themeLightBtn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false')
+}
+applyTheme(getPreferredTheme())
+if (themeDarkBtn) {
+  themeDarkBtn.addEventListener('click', () => {
+    localStorage.setItem(THEME_STORAGE_KEY, 'dark')
+    applyTheme('dark')
+  })
+}
+if (themeLightBtn) {
+  themeLightBtn.addEventListener('click', () => {
+    localStorage.setItem(THEME_STORAGE_KEY, 'light')
+    applyTheme('light')
+  })
+}
 
 const TRASH_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
