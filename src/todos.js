@@ -98,11 +98,17 @@ function onDragPointerUp(e) {
 
 export async function ensureSession() {
   if (!supabase) return
-  const {
+  let {
     data: { session },
   } = await supabase.auth.getSession()
   if (session?.user) {
     state.setCurrentUser(session.user)
+    return
+  }
+  // Try to recover session from refresh token (e.g. after page refresh before storage is read)
+  const { data: refreshData } = await supabase.auth.refreshSession()
+  if (refreshData?.session?.user) {
+    state.setCurrentUser(refreshData.session.user)
     return
   }
   const { data, error } = await supabase.auth.signInAnonymously()
@@ -163,7 +169,7 @@ export async function loadTodos() {
 
   const { data, error } = await supabase
     .from('todos')
-    .select('id, todo_text:text, completed, created_at, category, position')
+    .select('id, text, completed, created_at, category, position')
     .eq('user_id', state.currentUser.id)
     .order('position', { ascending: true })
     .order('created_at', { ascending: true })
@@ -174,10 +180,10 @@ export async function loadTodos() {
   let fromDb = (data ?? []).map((row, index) => ({
     id: row.id,
     text:
-      typeof row.todo_text === 'string'
-        ? row.todo_text
-        : typeof row.text === 'string'
-          ? row.text
+      typeof row.text === 'string'
+        ? row.text
+        : typeof row.todo_text === 'string'
+          ? row.todo_text
           : '',
     completed: Boolean(row.completed),
     created_at: row.created_at,
@@ -348,7 +354,7 @@ export async function addTodo(taskText, category = 'work') {
       user_id: user.id,
       category: cat,
     })
-    .select('id, todo_text:text, completed, created_at, category')
+    .select('id, text, completed, created_at, category, position')
     .single()
   setAddLoading(false)
   if (error) {
@@ -366,10 +372,10 @@ export async function addTodo(taskText, category = 'work') {
     const newTodo = {
       id: inserted.id,
       text:
-        typeof inserted.todo_text === 'string'
-          ? inserted.todo_text
-          : typeof inserted.text === 'string'
-            ? inserted.text
+        typeof inserted.text === 'string'
+          ? inserted.text
+          : typeof inserted.todo_text === 'string'
+            ? inserted.todo_text
             : trimmed,
       completed: Boolean(inserted.completed),
       created_at: inserted.created_at,
