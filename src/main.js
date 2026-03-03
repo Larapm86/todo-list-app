@@ -32,6 +32,7 @@ let authTooltipDismissListener = null
 const todoErrorEl = document.getElementById('todo-error')
 const todoEmptyEl = document.getElementById('todo-empty')
 const filterRowEl = document.getElementById('filter-row')
+const filterRowSlotEl = document.querySelector('.filter-row-slot')
 const todoAddBtn = document.getElementById('todo-add-btn')
 const todoAddBtnIcon = todoAddBtn?.querySelector('.add-form__submit-icon')
 const todoAddBtnSpinner = todoAddBtn?.querySelector('.add-form__spinner')
@@ -597,18 +598,38 @@ document.addEventListener('keydown', (e) => {
 })
 statusDropdownPanel?.addEventListener('click', (e) => e.stopPropagation())
 
-todoFilterButtons?.forEach((btn) => {
-  btn.addEventListener('click', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    categoryFilter = btn.dataset.category ?? ''
-    todoFilterButtons.forEach((b) => {
-      const bCat = b.dataset.category ?? ''
-      b.classList.toggle('filter-btn--active', (categoryFilter === '' && bCat === '') || (categoryFilter !== '' && bCat === categoryFilter))
-    })
-    renderTodos()
+function handleFilterButtonTap(btn) {
+  if (!btn) return
+  categoryFilter = btn.dataset.category ?? ''
+  todoFilterButtons?.forEach((b) => {
+    const bCat = b.dataset.category ?? ''
+    b.classList.toggle('filter-btn--active', (categoryFilter === '' && bCat === '') || (categoryFilter !== '' && bCat === categoryFilter))
   })
-})
+  renderTodos()
+}
+
+if (filterRowSlotEl) {
+  filterRowSlotEl.addEventListener(
+    'touchend',
+    (e) => {
+      const btn = e.target.closest('.filter-btn')
+      if (btn) {
+        e.preventDefault()
+        e.stopPropagation()
+        handleFilterButtonTap(btn)
+      }
+    },
+    { passive: false }
+  )
+  filterRowSlotEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter-btn')
+    if (btn) {
+      e.preventDefault()
+      e.stopPropagation()
+      handleFilterButtonTap(btn)
+    }
+  })
+}
 
 listEl?.addEventListener('click', (e) => {
   const cb = e.target.closest('.todo-item__checkbox')
