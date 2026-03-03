@@ -49,6 +49,8 @@ export const THEME_STORAGE_KEY = 'todo-theme'
 
 export const ADD_CHECK_DURATION_MS = 720
 export const TODO_ADD_IN_ANIMATION_MS = 550
+/** Delay before showing sign-in tooltip after adding a todo (anonymous user); 6s after add animation */
+export const AUTH_TOOLTIP_DELAY_MS = TODO_ADD_IN_ANIMATION_MS + 6000
 export const CELEBRATION_DURATION_MS = 3000
 
 export const AUTH_VIEW = {

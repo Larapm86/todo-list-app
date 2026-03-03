@@ -175,6 +175,37 @@
           </button>
         </div>
 
+        <!-- Overlay: dims background when floating add panel is open -->
+        <div id="floating-add-overlay" class="floating-add-overlay" aria-hidden="true"></div>
+        <!-- Floating add panel: same UI as main add block, slides out below menu when plus is tapped -->
+        <div id="floating-add-panel" class="floating-add-panel" aria-hidden="true" aria-label="Add a task">
+          <div class="floating-add-panel__inner add-block">
+            <form id="floating-add-form" class="add-form add-form--tags-visible" action="#" aria-label="Add todo">
+              <label for="floating-add-input" class="add-form__label">What's on your list today?</label>
+              <div class="add-form__row">
+                <input type="text" id="floating-add-input" class="add-form__input" name="todo" placeholder="" autocomplete="off" />
+                <button type="submit" class="add-form__submit" aria-label="Add task">
+                  <span class="add-form__submit-icon" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </span>
+                  <span class="add-form__check" hidden aria-hidden="true">
+                    <svg class="add-form__check-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path class="add-form__check-path" d="M5 12l5 5 9-10" pathLength="1"/></svg>
+                  </span>
+                </button>
+              </div>
+              <div class="add-form__category" role="group" aria-label="Category">
+                <div class="add-form__chips">
+                  <button type="button" class="chip chip--active" data-category="general">General</button>
+                  <button type="button" class="chip" data-category="work">Work</button>
+                  <button type="button" class="chip" data-category="personal">Personal</button>
+                  <button type="button" class="chip" data-category="errands">Errands</button>
+                </div>
+              </div>
+            </form>
+            <p id="floating-add-error" class="add-form__error" role="alert" hidden></p>
+          </div>
+        </div>
+
         <!-- Filter row: above list, space reserved so it fades in without layout jump -->
         <div class="filter-row-slot">
           <div id="filter-row" class="filter-row filter-row--hidden" role="group" aria-label="Filter list">

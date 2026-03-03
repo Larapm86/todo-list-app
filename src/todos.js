@@ -1,6 +1,6 @@
 /** Todo CRUD, render list, session */
 import { supabase } from './supabase.js'
-import { CATEGORY_LABELS, CHECKBOX_SVG, TRASH_SVG, DRAG_HANDLE_SVG, TODO_ADD_IN_ANIMATION_MS } from './constants.js'
+import { CATEGORY_LABELS, CHECKBOX_SVG, TRASH_SVG, DRAG_HANDLE_SVG, TODO_ADD_IN_ANIMATION_MS, AUTH_TOOLTIP_DELAY_MS } from './constants.js'
 import * as state from './state.js'
 import {
   listEl,
@@ -336,7 +336,7 @@ export async function addTodo(taskText, category = 'general') {
     state.setTodos([...state.todos, newTodo])
     renderTodos(true, newTodo.id)
     showAddSuccessCheck()
-    setTimeout(showAuthTooltip, TODO_ADD_IN_ANIMATION_MS)
+    setTimeout(showAuthTooltip, AUTH_TOOLTIP_DELAY_MS)
     return
   }
   const { data: inserted, error } = await supabase
@@ -450,7 +450,7 @@ export function deleteTodo(id) {
     }
     state.setPendingDeleteId(null)
     state.setUndoDeleteTimeout(null)
-  }, 5000)
+  }, 1200)
   state.setUndoDeleteTimeout(timeoutId)
 }
 
@@ -467,9 +467,32 @@ export function undoDelete() {
   state.setTodos(next)
   renderTodos()
   document.dispatchEvent(new CustomEvent('todos-changed', { detail: { hasTodos: state.todos.length > 0 } }))
-  toastEl?.setAttribute('hidden', '')
-  if (state.undoDeleteTimeout) clearTimeout(state.undoDeleteTimeout)
-  state.setUndoDeleteTimeout(null)
+  dismissDeleteToast()
+}
+
+/** Dismiss the "Todo deleted" toast and clear undo state (e.g. when returning to 0 todos). Optionally fade out first. */
+export function dismissDeleteToast(animate = false) {
+  if (!toastEl) {
+    clearDeleteToastState()
+    return
+  }
+  if (animate && !toastEl.hasAttribute('hidden')) {
+    toastEl.classList.add('toast--dismissing')
+    setTimeout(() => {
+      toastEl?.setAttribute('hidden', '')
+      toastEl?.classList.remove('toast--dismissing')
+      clearDeleteToastState()
+    }, 220)
+  } else {
+    toastEl.setAttribute('hidden', '')
+    clearDeleteToastState()
+  }
+}
+function clearDeleteToastState() {
+  if (state.undoDeleteTimeout) {
+    clearTimeout(state.undoDeleteTimeout)
+    state.setUndoDeleteTimeout(null)
+  }
   state.setLastDeletedTodo(null)
   state.setPendingDeleteId(null)
 }
@@ -486,9 +509,21 @@ export function renderTodos(justAdded = false, addedId = null, updateFilterRowVi
   if (todoEmptyEl) todoEmptyEl.hidden = hasTodos
   if (todoNoMatchEl) todoNoMatchEl.hidden = !hasTodos || hasMatch
   if (updateFilterRowVisibility && filterRowEl) {
-    filterRowEl.classList.toggle('filter-row--hidden', !showFilterRow)
     const slot = filterRowEl.closest('.filter-row-slot')
+    const wasFilterHidden = filterRowEl.classList.contains('filter-row--hidden')
+    const firstTodoJustAdded = justAdded && state.todos.length === 1
+    if (firstTodoJustAdded && wasFilterHidden && showFilterRow && slot) {
+      slot.classList.add('filter-row-slot--instant-show')
+      filterRowEl.classList.add('filter-row--instant-show')
+    }
+    filterRowEl.classList.toggle('filter-row--hidden', !showFilterRow)
     if (slot) slot.classList.toggle('filter-row-slot--visible', showFilterRow)
+    if (firstTodoJustAdded && wasFilterHidden && showFilterRow && slot) {
+      requestAnimationFrame(() => {
+        slot.classList.remove('filter-row-slot--instant-show')
+        filterRowEl.classList.remove('filter-row--instant-show')
+      })
+    }
   }
   if (!hasTodos) closeStatusDropdown()
   listEl.innerHTML = ''

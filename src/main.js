@@ -3,7 +3,7 @@
  */
 import './style.css'
 import { supabase } from './supabase.js'
-import { PLACEHOLDER_EXAMPLES } from './constants.js'
+import { PLACEHOLDER_EXAMPLES, ADD_CHECK_DURATION_MS } from './constants.js'
 import * as state from './state.js'
 import {
   form,
@@ -38,6 +38,12 @@ import {
   floatingMenuEl,
   floatingMenuPencilSlotEl,
   floatingAddBtnEl,
+  floatingAddOverlayEl,
+  floatingAddPanelEl,
+  floatingAddFormEl,
+  floatingAddInputEl,
+  floatingAddErrorEl,
+  todoErrorEl,
 } from './dom.js'
 import { initTheme } from './theme.js'
 import * as auth from './auth.js'
@@ -300,42 +306,192 @@ crossModeToggleBtn?.addEventListener('pointerenter', () => {
 const FLOATING_MENU_TRANSITION_MS = 350
 const mainEl = document.querySelector('.main')
 
+// Timeouts for staggered "zero todos" transition; cleared when user undoes or todos change
+let zeroTodoTransitionTimeouts = []
+
+function clearZeroTodoTransition() {
+  zeroTodoTransitionTimeouts.forEach((id) => clearTimeout(id))
+  zeroTodoTransitionTimeouts = []
+}
+
 function updateFloatingMenu() {
   const hasTodos = state.todos.length > 0
   if (!floatingMenuEl || !floatingMenuPencilSlotEl || !brandHeaderEl || !crossModeToggleBtn || !mainEl) return
   if (hasTodos) {
+    clearZeroTodoTransition()
     floatingMenuPencilSlotEl.appendChild(crossModeToggleBtn)
     floatingAddBtnEl?.removeAttribute('hidden')
     floatingMenuEl.classList.remove('floating-menu--hidden')
     mainEl.classList.add('main--with-floating-menu')
+    mainEl.classList.remove('main--reveal-brand', 'main--reveal-add-block')
     brandHeaderEl.setAttribute('aria-hidden', 'true')
     addBlockEl.setAttribute('aria-hidden', 'true')
+    if (todoEmptyEl) {
+      todoEmptyEl.classList.remove('empty-state--stagger-reveal', 'empty-state--reveal-text', 'empty-state--reveal-party')
+    }
     setTimeout(() => {
       brandHeaderEl.hidden = true
       addBlockEl.hidden = true
     }, FLOATING_MENU_TRANSITION_MS)
   } else {
-    brandHeaderEl.hidden = false
-    addBlockEl.hidden = false
-    brandHeaderEl.removeAttribute('aria-hidden')
-    addBlockEl.removeAttribute('aria-hidden')
-    requestAnimationFrame(() => {
-      mainEl.classList.remove('main--with-floating-menu')
-    })
+    // Keep "Todo deleted" visible so user can read and undo; then as toast is gone, reveal elements one by one
+    if (todoEmptyEl) todoEmptyEl.hidden = true
     brandHeaderEl.appendChild(crossModeToggleBtn)
     floatingAddBtnEl?.setAttribute('hidden', '')
     floatingMenuEl.classList.add('floating-menu--hidden')
+
+    const READ_TIME_MS = 1200
+    const TOAST_FADE_MS = 220
+    const BRAND_DELAY_MS = 350
+    const ADD_BLOCK_DELAY_MS = 350
+    const EMPTY_TEXT_DELAY_MS = 300
+
+    const t1 = setTimeout(() => {
+      todos.dismissDeleteToast?.(true)
+    }, READ_TIME_MS)
+    zeroTodoTransitionTimeouts.push(t1)
+
+    const t2 = setTimeout(() => {
+      brandHeaderEl.hidden = false
+      addBlockEl.hidden = false
+      brandHeaderEl.removeAttribute('aria-hidden')
+      addBlockEl.removeAttribute('aria-hidden')
+      requestAnimationFrame(() => {
+        mainEl.classList.add('main--reveal-brand')
+      })
+    }, READ_TIME_MS + TOAST_FADE_MS)
+    zeroTodoTransitionTimeouts.push(t2)
+
+    const t3 = setTimeout(() => {
+      mainEl.classList.add('main--reveal-add-block')
+    }, READ_TIME_MS + TOAST_FADE_MS + BRAND_DELAY_MS)
+    zeroTodoTransitionTimeouts.push(t3)
+
+    const t4 = setTimeout(() => {
+      mainEl.classList.remove('main--with-floating-menu', 'main--reveal-brand', 'main--reveal-add-block')
+      if (todoEmptyEl) {
+        todoEmptyEl.hidden = false
+        todoEmptyEl.classList.add('empty-state--stagger-reveal', 'empty-state--reveal-text')
+      }
+    }, READ_TIME_MS + TOAST_FADE_MS + BRAND_DELAY_MS + ADD_BLOCK_DELAY_MS)
+    zeroTodoTransitionTimeouts.push(t4)
+
+    const t5 = setTimeout(() => {
+      if (todoEmptyEl) todoEmptyEl.classList.add('empty-state--reveal-party')
+      clearZeroTodoTransition()
+    }, READ_TIME_MS + TOAST_FADE_MS + BRAND_DELAY_MS + ADD_BLOCK_DELAY_MS + EMPTY_TEXT_DELAY_MS)
+    zeroTodoTransitionTimeouts.push(t5)
   }
 }
 document.addEventListener('todos-changed', () => updateFloatingMenu())
 updateFloatingMenu()
+function openFloatingAddPanel() {
+  if (!floatingAddPanelEl || !floatingAddInputEl) return
+  floatingAddInputEl.value = ''
+  floatingAddInputEl.classList.remove('add-form__input--error')
+  floatingAddInputEl.placeholder =
+    PLACEHOLDER_EXAMPLES.length
+      ? PLACEHOLDER_EXAMPLES[Math.floor(Math.random() * PLACEHOLDER_EXAMPLES.length)]
+      : ''
+  floatingAddErrorEl?.setAttribute('hidden', '')
+  floatingMenuEl?.classList.add('floating-menu--panel-open')
+  floatingAddOverlayEl?.setAttribute('aria-hidden', 'false')
+  floatingAddPanelEl.setAttribute('aria-hidden', 'false')
+  syncFloatingPanelChipsToState()
+  /* Focus after panel has started growing so the input is visible (smooth on mobile) */
+  setTimeout(() => floatingAddInputEl?.focus(), 120)
+}
+
+function closeFloatingAddPanel() {
+  if (!floatingAddPanelEl) return
+  floatingAddOverlayEl?.setAttribute('aria-hidden', 'true')
+  floatingAddPanelEl.setAttribute('aria-hidden', 'true')
+  floatingMenuEl?.classList.remove('floating-menu--panel-open')
+  floatingAddInputEl?.blur()
+}
+
+function syncFloatingPanelChipsToState() {
+  const category = state.selectedCategoryForNew || 'general'
+  floatingAddPanelEl?.querySelectorAll('.add-form__chips .chip').forEach((btn) => {
+    btn.classList.toggle('chip--active', (btn.dataset.category ?? '') === category)
+  })
+}
+
 floatingAddBtnEl?.addEventListener('click', () => {
-  mainEl?.classList.remove('main--with-floating-menu')
-  addBlockEl.hidden = false
-  addBlockEl.removeAttribute('aria-hidden')
-  brandHeaderEl.hidden = false
-  brandHeaderEl.removeAttribute('aria-hidden')
-  input?.focus()
+  openFloatingAddPanel()
+})
+
+floatingAddPanelEl?.querySelectorAll('.add-form__chips .chip').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault()
+    const cat = btn.dataset.category ?? 'general'
+    state.setSelectedCategoryForNew(cat)
+    floatingAddPanelEl?.querySelectorAll('.add-form__chips .chip').forEach((b) => {
+      b.classList.toggle('chip--active', (b.dataset.category ?? '') === cat)
+    })
+  })
+})
+
+floatingAddFormEl?.addEventListener('submit', async (e) => {
+  e.preventDefault()
+  const value = (floatingAddInputEl?.value ?? '').trim()
+  if (!value) {
+    floatingAddErrorEl.textContent = 'Enter a task.'
+    floatingAddErrorEl?.removeAttribute('hidden')
+    floatingAddInputEl?.classList.add('add-form__input--error')
+    return
+  }
+  const category = state.selectedCategoryForNew || 'general'
+  clearTodoError()
+  floatingAddErrorEl?.setAttribute('hidden', '')
+  floatingAddInputEl?.classList.remove('add-form__input--error')
+  await todos.addTodo(value, category)
+  if (floatingAddPanelEl?.getAttribute('aria-hidden') !== 'false') return
+  if (todoErrorEl?.hasAttribute('hidden')) {
+    floatingAddInputEl.value = ''
+    const submitBtn = floatingAddPanelEl?.querySelector('.add-form__submit')
+    const icon = submitBtn?.querySelector('.add-form__submit-icon')
+    const check = submitBtn?.querySelector('.add-form__check')
+    if (icon && check) {
+      icon.hidden = true
+      check.hidden = false
+      check.classList.remove('add-form__check--animate')
+      void check.offsetWidth
+      check.classList.add('add-form__check--animate')
+    }
+    setTimeout(() => {
+      if (check) {
+        check.classList.remove('add-form__check--animate')
+        check.hidden = true
+      }
+      if (icon) icon.hidden = false
+      closeFloatingAddPanel()
+    }, ADD_CHECK_DURATION_MS)
+  } else {
+    floatingAddErrorEl.textContent = todoErrorEl?.textContent ?? 'Something went wrong.'
+    floatingAddErrorEl?.removeAttribute('hidden')
+    floatingAddInputEl?.classList.add('add-form__input--error')
+  }
+})
+
+function handleOverlayDismiss() {
+  closeFloatingAddPanel()
+  floatingAddInputEl.value = ''
+  floatingAddErrorEl?.setAttribute('hidden', '')
+  floatingAddInputEl?.classList.remove('add-form__input--error')
+}
+floatingAddOverlayEl?.addEventListener('click', handleOverlayDismiss)
+floatingAddOverlayEl?.addEventListener('pointerdown', (e) => {
+  if (e.target === floatingAddOverlayEl) handleOverlayDismiss()
+})
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return
+  if (floatingAddPanelEl?.getAttribute('aria-hidden') !== 'false') return
+  closeFloatingAddPanel()
+  floatingAddInputEl.value = ''
+  floatingAddErrorEl?.setAttribute('hidden', '')
+  floatingAddInputEl?.classList.remove('add-form__input--error')
 })
 
 // Drag-to-cross: while pointer down in cross mode, entering a todo marks it completed

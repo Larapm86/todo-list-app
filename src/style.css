@@ -27,6 +27,10 @@
   --app-max-width: 40rem;
   --add-row-height: 2.5rem;
   --nav-height: 3.5rem;
+  /* Floating menu: position panel just above it (menu bottom + menu height + gap) */
+  --floating-menu-bottom: var(--space-xl);
+  --floating-menu-height: 3.5rem;
+  --floating-panel-bottom: calc(var(--floating-menu-bottom) + var(--floating-menu-height) + 0.5rem);
 
   /* Type scale – hierarchy */
   --text-xs: 0.75rem;
@@ -97,6 +101,7 @@ html[data-theme="light"] a:hover {
 html[data-theme="light"] button {
   background-color: #f9f9f9;
 }
+html[data-theme="light"] .brand-header__pencil-btn,
 html[data-theme="light"] .auth-password-toggle,
 html[data-theme="light"] .auth-password-toggle:hover,
 html[data-theme="light"] .app-bar__login,
@@ -265,7 +270,9 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -493,7 +500,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
 /* Auth tooltip – points to Sign in / Get started after adding a todo anonymously */
 .auth-tooltip {
   position: fixed;
-  z-index: 20;
+  z-index: 200;
   transform: translateX(-50%);
   width: max-content;
   max-width: 15rem;
@@ -512,7 +519,7 @@ html[data-theme="light"] .theme-toggle__option:hover {
 /* Drag handle tooltip – contextual hint on hover */
 .drag-handle-tooltip {
   position: fixed;
-  z-index: 25;
+  z-index: 200;
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
@@ -895,7 +902,7 @@ html[data-theme="light"] .drag-handle-tooltip {
   margin-top: var(--space-md);
 }
 .main--with-floating-menu .brand-header,
-.main--with-floating-menu .add-block {
+.main--with-floating-menu > .add-block {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
@@ -906,9 +913,36 @@ html[data-theme="light"] .drag-handle-tooltip {
   transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
-.main--with-floating-menu .add-block .add-form__row,
-.main--with-floating-menu .add-block .add-form__category,
-.main--with-floating-menu .add-block .add-form__label {
+/* Staggered reveal when returning to zero todos: show brand (pencil) first */
+.main--with-floating-menu.main--reveal-brand .brand-header {
+  max-height: 10rem;
+  opacity: 1;
+  overflow: visible;
+  margin-bottom: var(--space-xl);
+  padding: 0;
+  border-width: 1px;
+  min-height: auto;
+  pointer-events: auto;
+}
+/* Then add block (todo form) */
+.main--with-floating-menu.main--reveal-add-block > .add-block {
+  max-height: 32rem;
+  opacity: 1;
+  overflow: visible;
+  margin: 0;
+  padding: var(--space-md) var(--space-lg);
+  border-width: 1px;
+  min-height: auto;
+  pointer-events: auto;
+}
+.main--with-floating-menu.main--reveal-add-block > .add-block .add-form__row,
+.main--with-floating-menu.main--reveal-add-block > .add-block .add-form__category,
+.main--with-floating-menu.main--reveal-add-block > .add-block .add-form__label {
+  opacity: 1;
+}
+.main--with-floating-menu > .add-block .add-form__row,
+.main--with-floating-menu > .add-block .add-form__category,
+.main--with-floating-menu > .add-block .add-form__label {
   opacity: 0;
 }
 .brand-header {
@@ -981,7 +1015,7 @@ body.app--cross-mode .brand-header__pencil-btn {
 .floating-menu {
   position: fixed;
   left: 50%;
-  bottom: var(--space-xl);
+  bottom: var(--floating-menu-bottom);
   transform: translateX(-50%) translateY(0);
   display: flex;
   align-items: center;
@@ -996,6 +1030,12 @@ body.app--cross-mode .brand-header__pencil-btn {
   transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
 }
 .floating-menu--hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(1rem);
+  pointer-events: none;
+}
+/* Hide menu while add panel is open (smoother transition) */
+.floating-menu--panel-open {
   opacity: 0;
   transform: translateX(-50%) translateY(1rem);
   pointer-events: none;
@@ -1059,6 +1099,71 @@ html[data-theme="light"] .floating-menu__add-btn {
 html[data-theme="light"] .floating-menu__add-btn:hover {
   background: var(--accent-hover);
   color: #fff;
+}
+
+/* Overlay: dims background when floating add panel is open */
+.floating-add-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 98;
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.floating-add-overlay[aria-hidden="false"] {
+  pointer-events: auto;
+  opacity: 1;
+}
+html[data-theme="light"] .floating-add-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Floating add panel: takes the floating menu position when open (menu hides), grows from that spot */
+.floating-add-panel {
+  position: fixed;
+  left: 50%;
+  bottom: var(--floating-menu-bottom);
+  transform: translateX(-50%) scaleY(0);
+  transform-origin: 50% 100%;
+  z-index: 101;
+  width: min(calc(100vw - var(--space-xl)), var(--app-max-width));
+  max-width: calc(100vw - var(--space-md));
+  padding: 0 var(--space-md);
+  box-sizing: border-box;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.28s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+.floating-add-panel[aria-hidden="false"] {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(-50%) scaleY(1);
+}
+.floating-add-panel[aria-hidden="true"] {
+  transform: translateX(-50%) scaleY(0);
+}
+.floating-add-panel > .floating-add-panel__inner {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  padding: var(--space-md) var(--space-lg);
+  box-sizing: border-box;
+  max-height: min(calc(100vh - var(--floating-menu-bottom) - 2rem), 24rem);
+  overflow-y: auto;
+}
+/* Light theme: match floating menu (white card, subtle border and shadow) */
+html[data-theme="light"] .floating-add-panel > .floating-add-panel__inner {
+  background: var(--bg-elevated);
+  border-color: var(--border-default);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+.floating-add-panel .add-form__category {
+  /* Always show category chips in floating panel (same as main when tags visible) */
+  display: flex;
 }
 
 /* Brand header – pixel pencil only */
@@ -1259,6 +1364,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   border: 1px solid rgba(0, 0, 0, 0.15);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1451,6 +1557,12 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   overflow: hidden;
   transition: min-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), margin 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
+/* First todo added: filter row appears instantly in final position (no animation) */
+.filter-row-slot--instant-show,
+.filter-row-slot--instant-show.filter-row-slot--visible,
+.filter-row--instant-show {
+  transition: none !important;
+}
 
 .filter-row-slot.filter-row-slot--visible {
   position: sticky;
@@ -1478,6 +1590,9 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 .filter-row.filter-row--hidden {
   opacity: 0;
   pointer-events: none;
+}
+.filter-row--instant-show.filter-row--hidden {
+  transition: none !important;
 }
 
 /* Filter bar (category) – single horizontal row, scrollable; receives touches on mobile above overlapping list */
@@ -1710,6 +1825,19 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 
 .empty-state__text {
   display: block;
+}
+
+/* Staggered reveal: text then party button when returning to zero todos */
+.empty-state--stagger-reveal .empty-state__text,
+.empty-state--stagger-reveal .empty-state__party {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.empty-state--stagger-reveal.empty-state--reveal-text .empty-state__text {
+  opacity: 1;
+}
+.empty-state--stagger-reveal.empty-state--reveal-party .empty-state__party {
+  opacity: 1;
 }
 
 .empty-state__party {
@@ -2086,13 +2214,13 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   padding-left: calc(1.5rem + var(--space-xs) + 1.375rem + var(--space-sm));
 }
 
-/* Tag pill – same size as add-form category chips; button reset */
+/* Tag – rectangle with rounded corners, same shape as add-form chips */
 .todo-item__category {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: var(--font-medium);
   line-height: var(--leading-tight);
@@ -2134,7 +2262,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   display: inline-flex;
   align-items: center;
   padding: var(--space-xs) var(--space-sm);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: var(--font-medium);
   line-height: var(--leading-tight);
@@ -2153,12 +2281,12 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   opacity: 0.9;
 }
 
-/* Toast */
+/* Toast – centered on screen */
 .toast {
   position: fixed;
-  bottom: var(--space-lg);
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
   background: var(--bg-elevated);
@@ -2177,10 +2305,14 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 .toast[hidden] {
   display: none;
 }
+.toast--dismissing {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
 
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .toast__undo {
