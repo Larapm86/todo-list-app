@@ -33,6 +33,11 @@ import {
   crossModeToggleBtn,
   appEl,
   cursorPencilEl,
+  brandHeaderEl,
+  addBlockEl,
+  floatingMenuEl,
+  floatingMenuPencilSlotEl,
+  floatingAddBtnEl,
 } from './dom.js'
 import { initTheme } from './theme.js'
 import * as auth from './auth.js'
@@ -186,7 +191,7 @@ listEl?.addEventListener('click', (e) => {
       e.stopPropagation()
       const id = item.dataset.todoId
       const t = state.todos.find((x) => x.id === id)
-      if (t && !t.completed) todos.toggleTodo(id)
+      if (t) todos.toggleTodo(id)
     }
     return
   }
@@ -291,6 +296,48 @@ crossModeToggleBtn?.addEventListener('pointerenter', () => {
   updateCrossModeUI()
 })
 
+// ---- Floating menu (pencil + plus when there are todos) ----
+const FLOATING_MENU_TRANSITION_MS = 350
+const mainEl = document.querySelector('.main')
+
+function updateFloatingMenu() {
+  const hasTodos = state.todos.length > 0
+  if (!floatingMenuEl || !floatingMenuPencilSlotEl || !brandHeaderEl || !crossModeToggleBtn || !mainEl) return
+  if (hasTodos) {
+    floatingMenuPencilSlotEl.appendChild(crossModeToggleBtn)
+    floatingAddBtnEl?.removeAttribute('hidden')
+    floatingMenuEl.classList.remove('floating-menu--hidden')
+    mainEl.classList.add('main--with-floating-menu')
+    brandHeaderEl.setAttribute('aria-hidden', 'true')
+    addBlockEl.setAttribute('aria-hidden', 'true')
+    setTimeout(() => {
+      brandHeaderEl.hidden = true
+      addBlockEl.hidden = true
+    }, FLOATING_MENU_TRANSITION_MS)
+  } else {
+    brandHeaderEl.hidden = false
+    addBlockEl.hidden = false
+    brandHeaderEl.removeAttribute('aria-hidden')
+    addBlockEl.removeAttribute('aria-hidden')
+    requestAnimationFrame(() => {
+      mainEl.classList.remove('main--with-floating-menu')
+    })
+    brandHeaderEl.appendChild(crossModeToggleBtn)
+    floatingAddBtnEl?.setAttribute('hidden', '')
+    floatingMenuEl.classList.add('floating-menu--hidden')
+  }
+}
+document.addEventListener('todos-changed', () => updateFloatingMenu())
+updateFloatingMenu()
+floatingAddBtnEl?.addEventListener('click', () => {
+  mainEl?.classList.remove('main--with-floating-menu')
+  addBlockEl.hidden = false
+  addBlockEl.removeAttribute('aria-hidden')
+  brandHeaderEl.hidden = false
+  brandHeaderEl.removeAttribute('aria-hidden')
+  input?.focus()
+})
+
 // Drag-to-cross: while pointer down in cross mode, entering a todo marks it completed
 let crossDragActive = false
 let crossDragCrossedIds = null
@@ -302,7 +349,7 @@ listEl?.addEventListener('pointerdown', (e) => {
   if (item) {
     const id = item.dataset.todoId
     const t = state.todos.find((x) => x.id === id)
-    if (t && !t.completed) {
+    if (t) {
       crossDragCrossedIds.add(id)
       todos.toggleTodo(id)
     }
@@ -316,7 +363,7 @@ document.addEventListener('pointermove', (e) => {
   const id = item.dataset.todoId
   if (!id || crossDragCrossedIds.has(id)) return
   const t = state.todos.find((x) => x.id === id)
-  if (t && !t.completed) {
+  if (t) {
     crossDragCrossedIds.add(id)
     todos.toggleTodo(id)
   }

@@ -877,6 +877,46 @@ html[data-theme="light"] .drag-handle-tooltip {
   flex-direction: column;
   gap: var(--space-lg);
   padding-top: 3.5rem;
+  transition: padding-bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1), gap 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* When floating menu is visible: collapse add block and brand header; filter row and list sit just below nav; reserve space above FAB */
+.main--with-floating-menu {
+  padding-bottom: 5.5rem;
+  gap: 0;
+}
+.main--with-floating-menu .filter-row-slot {
+  margin-top: var(--space-sm);
+}
+.main--with-floating-menu .filter-row-slot.filter-row-slot--visible {
+  margin-top: var(--space-sm);
+}
+.main--with-floating-menu .list-section {
+  margin-top: var(--space-md);
+}
+.main--with-floating-menu .brand-header,
+.main--with-floating-menu .add-block {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border-width: 0;
+  min-height: 0;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+.main--with-floating-menu .add-block .add-form__row,
+.main--with-floating-menu .add-block .add-form__category,
+.main--with-floating-menu .add-block .add-form__label {
+  opacity: 0;
+}
+.brand-header {
+  max-height: 10rem;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.add-block {
+  max-height: 32rem;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Cross-off mode: hide system cursor; pencil icon hidden, slot stays for return */
@@ -934,6 +974,90 @@ body.app--cross-mode .brand-header__pencil-btn {
 .brand-header__pencil-btn {
   min-width: 2.5rem;
   min-height: 2.75rem;
+}
+
+/* Floating menu: pencil + plus, appears when there are todos – rectangular with rounded corners */
+.floating-menu {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-xl);
+  transform: translateX(-50%) translateY(0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  z-index: 100;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+.floating-menu--hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(1rem);
+  pointer-events: none;
+}
+.floating-menu__pencil-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 2.75rem;
+}
+.floating-menu__pencil-slot .brand-header__pencil-btn {
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+.floating-menu__pencil-slot .brand-header__pencil-btn:hover {
+  transform: scale(1.08);
+}
+/* Floating add button: same look and behavior as main add-form submit */
+.floating-menu__add-btn {
+  flex-shrink: 0;
+  width: var(--add-row-height);
+  height: var(--add-row-height);
+  padding: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.floating-menu__add-btn svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+.floating-menu__add-btn:hover {
+  background: var(--accent-hover);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+.floating-menu__add-btn:active {
+  background: var(--accent-active);
+  color: #fff;
+}
+.floating-menu__add-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.floating-menu__add-btn[hidden] {
+  display: none !important;
+}
+html[data-theme="light"] .floating-menu {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+html[data-theme="light"] .floating-menu__add-btn {
+  background: var(--accent);
+  color: #fff;
+}
+html[data-theme="light"] .floating-menu__add-btn:hover {
+  background: var(--accent-hover);
+  color: #fff;
 }
 
 /* Brand header – pixel pencil only */
@@ -1538,6 +1662,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   flex-direction: column;
   align-items: center;
   align-self: stretch;
+  transition: margin-top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* When empty state is shown, pull list section closer to the add-todo card */

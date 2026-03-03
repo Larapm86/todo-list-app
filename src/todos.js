@@ -211,6 +211,7 @@ export async function loadTodos() {
   if (state.currentUser?.id !== loadingForUserId) return // session changed (e.g. sign-out), don't overwrite
   state.setTodos(merged)
   renderTodos()
+  document.dispatchEvent(new CustomEvent('todos-changed', { detail: { hasTodos: state.todos.length > 0 } }))
 }
 
 export function isLocalTodoId(id) {
@@ -432,10 +433,12 @@ export function deleteTodo(id) {
     setTimeout(() => {
       state.setTodos(state.todos.filter((t) => t.id !== id))
       renderTodos()
+      document.dispatchEvent(new CustomEvent('todos-changed', { detail: { hasTodos: state.todos.length > 0 } }))
     }, 320)
   } else {
     state.setTodos(state.todos.filter((t) => t.id !== id))
     renderTodos()
+    document.dispatchEvent(new CustomEvent('todos-changed', { detail: { hasTodos: state.todos.length > 0 } }))
   }
   if (toastMessage) toastMessage.textContent = 'Todo deleted.'
   toastEl?.removeAttribute('hidden')
@@ -463,6 +466,7 @@ export function undoDelete() {
   normalizePositions(next)
   state.setTodos(next)
   renderTodos()
+  document.dispatchEvent(new CustomEvent('todos-changed', { detail: { hasTodos: state.todos.length > 0 } }))
   toastEl?.setAttribute('hidden', '')
   if (state.undoDeleteTimeout) clearTimeout(state.undoDeleteTimeout)
   state.setUndoDeleteTimeout(null)
@@ -578,4 +582,5 @@ export function renderTodos(justAdded = false, addedId = null, updateFilterRowVi
       .querySelectorAll('.todo-item--adding')
       .forEach((el) => el.classList.remove('todo-item--adding'))
   }, TODO_ADD_IN_ANIMATION_MS)
+  document.dispatchEvent(new CustomEvent('todos-changed', { detail: { hasTodos: state.todos.length > 0 } }))
 }
