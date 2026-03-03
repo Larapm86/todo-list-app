@@ -996,15 +996,11 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 }
 
 .add-form__category {
-  display: none;
+  display: flex;
   align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
   margin-top: 0;
-}
-
-.add-form:focus-within .add-form__category {
-  display: flex;
 }
 
 .add-form__chips {
@@ -1212,18 +1208,6 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-/* Larger tappable area on small screens (44px minimum per Apple HIG) */
-@media (max-width: 25rem) {
-  .filter-btn {
-    min-height: 2.75rem;
-    min-width: 2.75rem;
-    padding: 0.5rem 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-}
-
 .filter-btn:hover {
   color: var(--color-text-primary);
   background: var(--bg-hover);
@@ -1254,7 +1238,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   align-self: stretch;
 }
 
-/* iPhone 13 (390px) and smaller: no overlap, larger tap targets */
+/* iPhone 13 (390px) and smaller: no overlap so filter tags receive touches */
 @media (max-width: 25rem) {
   .list-section {
     margin-top: 0;
@@ -1266,17 +1250,6 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   }
   .filter-row {
     pointer-events: auto;
-  }
-  .filter-bar__options {
-    gap: var(--space-sm);
-  }
-  .add-form__chips .chip {
-    min-height: 2.75rem;
-    min-width: 2.75rem;
-    padding: 0.5rem 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
   }
 }
 
