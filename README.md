@@ -4,7 +4,7 @@ A simple, responsive todo list with dark/light themes, categories, and optional 
 
 ## Features
 
-- **Tasks**: Add, complete, and delete todos with optional undo
+- **Tasks**: Add, complete, and delete todos with optional undo; drag the handle to reorder (order is saved per user)
 - **Categories**: General, Work, Personal, Errands (filter by category)
 - **Status filter**: View all, Active, or Completed
 - **Auth**: Try the app without signing in (anonymous session); sign in or create an account to sync tasks. Local-only todos are migrated to your account when you sign in.
@@ -41,6 +41,8 @@ A simple, responsive todo list with dark/light themes, categories, and optional 
      - **anon public** key → `VITE_SUPABASE_ANON_KEY`
 
    Without a valid `.env`, the app still runs; you just won’t have sign-in or cloud sync.
+
+   **Drag-and-drop order**: The app stores a `position` column on the `todos` table. Run the migration `supabase/migrations/20260303130000_add_todos_position.sql` (e.g. via `supabase db push` or the SQL editor) so reorder is persisted.
 
 3. **Run**
 

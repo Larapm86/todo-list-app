@@ -106,7 +106,10 @@ html[data-theme="light"] .app-bar__signup,
 html[data-theme="light"] .app-bar__signup:hover,
 html[data-theme="light"] .app-bar__signup:active,
 html[data-theme="light"] .auth-form__switch,
-html[data-theme="light"] .auth-form__switch:hover {
+html[data-theme="light"] .auth-form__switch:hover,
+html[data-theme="light"] .todo-item__drag-handle,
+html[data-theme="light"] .todo-item__checkbox,
+html[data-theme="light"] .todo-item__delete {
   background-color: transparent;
 }
 html[data-theme="light"] .add-form__input {
@@ -1647,6 +1650,62 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   pointer-events: none;
 }
 
+.todo-item--dragging {
+  opacity: 0.92;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transform: scale(1.02);
+  z-index: 10;
+  cursor: grabbing;
+}
+
+.todo-item--drop-target {
+  border-top: 2px solid var(--color-accent, #60a5fa);
+  margin-top: -2px;
+}
+
+.todo-item__row {
+  min-width: 0;
+}
+
+/* Drag, checkbox, delete: fixed horizontal placement, vertically centered in card */
+.todo-item__drag-handle {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: grab;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s ease, background 0.15s ease;
+  z-index: 2;
+}
+
+.todo-item__drag-handle:hover {
+  color: var(--color-text-primary);
+}
+
+.todo-item__drag-handle:active,
+.todo-item--dragging .todo-item__drag-handle {
+  cursor: grabbing;
+}
+
+.todo-item__drag-handle svg {
+  width: 0.875rem;
+  height: 1rem;
+  pointer-events: none;
+}
+
 @keyframes todoAddIn {
   from {
     opacity: 0;
@@ -1658,18 +1717,16 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   }
 }
 
-/* Top row: checkbox (centered in card) + title */
-.todo-item__main {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding-right: 0;
-  margin-left: calc(1.375rem + var(--space-md));
+/* Content row: text only, padding reserves space for absolutely positioned controls */
+.todo-item__content {
+  padding-left: calc(1.5rem + var(--space-xs) + 1.375rem + var(--space-sm));
+  padding-right: calc(2rem + var(--space-sm));
+  min-width: 0;
 }
 
 .todo-item__checkbox {
   position: absolute;
-  left: var(--space-lg);
+  left: calc(1.5rem + var(--space-xs));
   top: 50%;
   transform: translateY(-50%);
   width: 1.375rem;
@@ -1685,6 +1742,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   color: var(--color-text-muted);
   cursor: pointer;
   transition: color 0.15s ease, box-shadow 0.15s ease;
+  z-index: 2;
 }
 
 .todo-item__checkbox:hover {
@@ -1741,11 +1799,11 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   font-weight: var(--font-medium);
 }
 
-/* Delete in top-right corner, out of flow */
+/* Delete: right placement, vertically centered; visible only on card hover or when focused */
 .todo-item__delete {
   position: absolute;
-  top: 50%;
   right: var(--space-sm);
+  top: 50%;
   transform: translateY(-50%);
   width: 2rem;
   height: 2rem;
@@ -1755,15 +1813,20 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  opacity: 0.5;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  z-index: 2;
 }
 
-.todo-item:hover .todo-item__delete {
+.todo-item:hover .todo-item__delete,
+.todo-item:focus-within .todo-item__delete,
+.todo-item__delete:focus-visible {
   opacity: 0.9;
+  pointer-events: auto;
 }
 
 .todo-item__delete:hover {
@@ -1787,14 +1850,14 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   fill: none;
 }
 
-/* Tag row: aligned with title, no divider – metadata under main content */
+/* Tag row: aligned with title text (after handle + checkbox), no divider */
 .todo-item__footer {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
   padding-top: var(--space-sm);
   margin-top: 0;
-  padding-left: calc(1.375rem + var(--space-md));
+  padding-left: calc(1.5rem + var(--space-xs) + 1.375rem + var(--space-sm));
 }
 
 /* Tag pill – same size as add-form category chips; button reset */
@@ -1992,7 +2055,10 @@ button {
   html:not([data-theme]) .app-bar__signup:hover,
   html:not([data-theme]) .app-bar__signup:active,
   html:not([data-theme]) .auth-form__switch,
-  html:not([data-theme]) .auth-form__switch:hover {
+  html:not([data-theme]) .auth-form__switch:hover,
+  html:not([data-theme]) .todo-item__drag-handle,
+  html:not([data-theme]) .todo-item__checkbox,
+  html:not([data-theme]) .todo-item__delete {
     background-color: transparent;
   }
   html:not([data-theme]) .brand-header__icon--pencil .pencil-lead {

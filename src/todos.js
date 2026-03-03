@@ -1,6 +1,6 @@
 /** Todo CRUD, render list, session */
 import { supabase } from './supabase.js'
-import { CATEGORY_LABELS, CHECKBOX_SVG, TRASH_SVG, TODO_ADD_IN_ANIMATION_MS } from './constants.js'
+import { CATEGORY_LABELS, CHECKBOX_SVG, TRASH_SVG, DRAG_HANDLE_SVG, TODO_ADD_IN_ANIMATION_MS } from './constants.js'
 import * as state from './state.js'
 import {
   listEl,
@@ -15,6 +15,85 @@ import { showConfetti } from './confetti.js'
 import { showAuthTooltip } from './auth.js'
 import { showTodoError, clearTodoError, setAddLoading, showAddSuccessCheck } from './ui.js'
 import { closeStatusDropdown } from './dropdown.js'
+
+let dragAndDropInitialized = false
+let dragState = null
+
+function setupDragAndDropOnList() {
+  if (dragAndDropInitialized || !listEl) return
+  dragAndDropInitialized = true
+  listEl.addEventListener('pointerdown', onListPointerDown)
+}
+
+function onListPointerDown(e) {
+  const handle = e.target.closest('.todo-item__drag-handle')
+  if (!handle || e.button !== 0) return
+  const li = handle.closest('.todo-item')
+  if (!li) return
+  e.preventDefault()
+  const todoId = li.dataset.todoId
+  if (!todoId) return
+  handle.setPointerCapture(e.pointerId)
+  dragState = {
+    pointerId: e.pointerId,
+    draggedId: todoId,
+    dragEl: li,
+  }
+  li.classList.add('todo-item--dragging')
+  document.addEventListener('pointermove', onDragPointerMove)
+  document.addEventListener('pointerup', onDragPointerUp)
+  document.addEventListener('pointercancel', onDragPointerUp)
+}
+
+function onDragPointerMove(e) {
+  if (!dragState || e.pointerId !== dragState.pointerId) return
+  e.preventDefault()
+  const dropTarget = getDropTarget(e.clientX, e.clientY)
+  if (dropTarget !== dragState.lastDropTarget) {
+    dragState.lastDropTarget = dropTarget
+    listEl.querySelectorAll('.todo-item--drop-target').forEach((el) => el.classList.remove('todo-item--drop-target'))
+    if (dropTarget?.el) dropTarget.el.classList.add('todo-item--drop-target')
+  }
+}
+
+function getDropTarget(clientX, clientY) {
+  const el = document.elementFromPoint(clientX, clientY)
+  const item = el?.closest('.todo-item')
+  if (item && item !== dragState?.dragEl) {
+    const id = item.dataset.todoId
+    if (id) return { id, el: item }
+  }
+  if (listEl?.contains(el) || listEl?.contains(el?.parentElement)) {
+    const rect = listEl.getBoundingClientRect()
+    if (clientY >= rect.bottom - 2) {
+      const last = listEl.querySelector('.todo-item:last-of-type')
+      if (last && last !== dragState?.dragEl) return { id: last.dataset.todoId, el: last, after: true }
+    }
+  }
+  return null
+}
+
+function onDragPointerUp(e) {
+  if (!dragState || e.pointerId !== dragState.pointerId) return
+  document.removeEventListener('pointermove', onDragPointerMove)
+  document.removeEventListener('pointerup', onDragPointerUp)
+  document.removeEventListener('pointercancel', onDragPointerUp)
+  dragState.dragEl.classList.remove('todo-item--dragging')
+  listEl?.querySelectorAll('.todo-item--drop-target').forEach((el) => el.classList.remove('todo-item--drop-target'))
+  const dropTarget = dragState.lastDropTarget
+  const draggedId = dragState.draggedId
+  dragState = null
+  if (dropTarget) {
+    if (dropTarget.after) {
+      const list = state.todos
+      const idx = list.findIndex((t) => t.id === dropTarget.id)
+      const next = list[idx + 1]
+      reorderTodos(draggedId, next?.id ?? null)
+    } else {
+      reorderTodos(draggedId, dropTarget.id)
+    }
+  }
+}
 
 export async function ensureSession() {
   if (!supabase) return
@@ -90,7 +169,7 @@ export async function loadTodos() {
     console.error('Failed to load todos:', error)
     return
   }
-  let fromDb = (data ?? []).map((row) => ({
+  let fromDb = (data ?? []).map((row, index) => ({
     id: row.id,
     text:
       typeof row.todo_text === 'string'
@@ -101,6 +180,7 @@ export async function loadTodos() {
     completed: Boolean(row.completed),
     created_at: row.created_at,
     category: typeof row.category === 'string' ? row.category : 'general',
+    position: typeof row.position === 'number' ? row.position : index,
   }))
   // Exclude DB rows we inserted for a local todo that the user then deleted during migration
   const currentLocalIds = new Set(
@@ -125,7 +205,8 @@ export async function loadTodos() {
   const localTodosToMerge = localTodosNow.filter(
     (t) => !insertedLocalIdToDbId[t.id]
   )
-  const merged = [...fromDb, ...localTodosToMerge].sort(sortByCreatedAt)
+  const merged = [...fromDb, ...localTodosToMerge].sort(sortByPositionThenCreatedAt)
+  normalizePositions(merged)
   if (state.currentUser?.id !== loadingForUserId) return // session changed (e.g. sign-out), don't overwrite
   state.setTodos(merged)
   renderTodos()
@@ -139,6 +220,19 @@ function sortByCreatedAt(a, b) {
   const ta = new Date(a?.created_at).getTime()
   const tb = new Date(b?.created_at).getTime()
   return (Number.isNaN(ta) ? 0 : ta) - (Number.isNaN(tb) ? 0 : tb)
+}
+
+function sortByPositionThenCreatedAt(a, b) {
+  const pa = typeof a?.position === 'number' ? a.position : 0
+  const pb = typeof b?.position === 'number' ? b.position : 0
+  if (pa !== pb) return pa - pb
+  return sortByCreatedAt(a, b)
+}
+
+function normalizePositions(todos) {
+  todos.forEach((t, i) => {
+    t.position = i
+  })
 }
 
 export async function updateTodoCategory(id, category) {
@@ -159,6 +253,46 @@ export async function updateTodoCategory(id, category) {
   }
   todo.category = cat
   renderTodos(false, null, false)
+}
+
+/**
+ * Reorder todos: move the todo with draggedId before the todo with dropTargetId (or at end if null).
+ * Optimistic update, then persist position for DB-backed todos.
+ */
+export async function reorderTodos(draggedId, dropTargetId) {
+  const list = state.todos
+  const fromIndex = list.findIndex((t) => t.id === draggedId)
+  if (fromIndex === -1) return
+  const dragged = list[fromIndex]
+  const toIndex =
+    dropTargetId == null
+      ? list.length - 1
+      : list.findIndex((t) => t.id === dropTargetId)
+  if (toIndex === -1 && dropTargetId != null) return
+  const insertIndex = dropTargetId == null ? list.length : toIndex
+  if (insertIndex === fromIndex || insertIndex === fromIndex + 1) return // no move
+
+  const reordered = list.filter((t) => t.id !== draggedId)
+  const actualInsert = insertIndex > fromIndex ? insertIndex - 1 : insertIndex
+  reordered.splice(actualInsert, 0, dragged)
+  normalizePositions(reordered)
+  state.setTodos(reordered)
+  renderTodos(false, null, false)
+
+  const toPersist = reordered.filter(
+    (t) => !isLocalTodoId(t.id) && typeof t.position === 'number'
+  )
+  if (toPersist.length === 0 || !supabase) return
+  const updates = toPersist.map((t) => ({ id: t.id, position: t.position }))
+  for (const u of updates) {
+    supabase
+      .from('todos')
+      .update({ position: u.position })
+      .eq('id', u.id)
+      .then(({ error }) => {
+        if (error) console.error('Failed to persist order:', error)
+      })
+  }
 }
 
 export async function addTodo(taskText, category = 'general') {
@@ -186,12 +320,16 @@ export async function addTodo(taskText, category = 'general') {
     // Only set currentUser when we have a real session user (anonymous); don't set a synthetic ID when offline (user undefined)
     if (user) state.setCurrentUser(user)
     const localId = 'local-' + Date.now()
+    const maxPos = state.todos.length
+      ? Math.max(...state.todos.map((t) => (typeof t.position === 'number' ? t.position : 0)))
+      : -1
     const newTodo = {
       id: localId,
       text: trimmed,
       completed: false,
       created_at: new Date().toISOString(),
       category: cat,
+      position: maxPos + 1,
     }
     state.setTodos([...state.todos, newTodo])
     renderTodos(true, newTodo.id)
@@ -201,7 +339,12 @@ export async function addTodo(taskText, category = 'general') {
   }
   const { data: inserted, error } = await supabase
     .from('todos')
-    .insert({ text: trimmed, completed: false, user_id: user.id, category: cat })
+    .insert({
+      text: trimmed,
+      completed: false,
+      user_id: user.id,
+      category: cat,
+    })
     .select('id, todo_text:text, completed, created_at, category')
     .single()
   setAddLoading(false)
@@ -213,6 +356,10 @@ export async function addTodo(taskText, category = 'general') {
   clearTodoError()
   state.setCurrentUser(user)
   if (inserted) {
+    const nextPosition =
+      state.todos.length > 0
+        ? Math.max(...state.todos.map((t) => (typeof t.position === 'number' ? t.position : 0))) + 1
+        : 0
     const newTodo = {
       id: inserted.id,
       text:
@@ -224,6 +371,7 @@ export async function addTodo(taskText, category = 'general') {
       completed: Boolean(inserted.completed),
       created_at: inserted.created_at,
       category: typeof inserted.category === 'string' ? inserted.category : 'general',
+      position: typeof inserted.position === 'number' ? inserted.position : nextPosition,
     }
     state.setTodos([...state.todos, newTodo])
     renderTodos(true, newTodo.id)
@@ -304,7 +452,15 @@ export function deleteTodo(id) {
 
 export function undoDelete() {
   if (!state.lastDeletedTodo) return
-  state.setTodos([...state.todos, state.lastDeletedTodo].sort(sortByCreatedAt))
+  const restored = { ...state.lastDeletedTodo }
+  const maxPos =
+    state.todos.length > 0
+      ? Math.max(...state.todos.map((t) => (typeof t.position === 'number' ? t.position : 0)))
+      : -1
+  if (typeof restored.position !== 'number') restored.position = maxPos + 1
+  const next = [...state.todos, restored].sort(sortByPositionThenCreatedAt)
+  normalizePositions(next)
+  state.setTodos(next)
   renderTodos()
   toastEl?.setAttribute('hidden', '')
   if (state.undoDeleteTimeout) clearTimeout(state.undoDeleteTimeout)
@@ -338,6 +494,13 @@ export function renderTodos(justAdded = false, addedId = null, updateFilterRowVi
       'todo-item todo-item--' + cat + (todo.completed ? ' todo-item--completed' : '')
     if (justAdded && todo.id === addedId) li.classList.add('todo-item--adding')
     li.dataset.todoId = todo.id
+
+    const dragHandle = document.createElement('button')
+    dragHandle.type = 'button'
+    dragHandle.className = 'todo-item__drag-handle'
+    dragHandle.setAttribute('aria-label', 'Drag to reorder')
+    dragHandle.innerHTML = DRAG_HANDLE_SVG
+    dragHandle.dataset.todoId = todo.id
 
     const checkbox = document.createElement('button')
     checkbox.type = 'button'
@@ -397,13 +560,18 @@ export function renderTodos(justAdded = false, addedId = null, updateFilterRowVi
     deleteBtn.setAttribute('aria-label', 'Delete')
     deleteBtn.innerHTML = TRASH_SVG
 
-    const main = document.createElement('div')
-    main.className = 'todo-item__main'
-    main.append(checkbox, textEl)
+    const content = document.createElement('div')
+    content.className = 'todo-item__content'
+    content.appendChild(textEl)
 
-    li.append(main, footer, deleteBtn)
+    const row = document.createElement('div')
+    row.className = 'todo-item__row'
+    row.appendChild(content)
+
+    li.append(dragHandle, checkbox, row, footer, deleteBtn)
     listEl.appendChild(li)
   }
+  setupDragAndDropOnList()
   setTimeout(() => {
     listEl
       .querySelectorAll('.todo-item--adding')
