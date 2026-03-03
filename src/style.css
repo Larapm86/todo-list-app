@@ -1069,6 +1069,7 @@ body.app--cross-mode .brand-header__pencil-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .floating-menu__add-btn svg {
@@ -1092,12 +1093,12 @@ body.app--cross-mode .brand-header__pencil-btn {
   display: none !important;
 }
 
-/* Label beside plus: visible only on mobile */
+/* Label inside button: hidden on desktop */
 .floating-menu__add-label {
   display: none;
 }
 
-/* Mobile: hide pencil in floating menu (no cursor for cross-off mode); keep only plus button + "Add todo" label */
+/* Mobile: hide pencil; plus button becomes icon + "Add todo" (16px), whole area tappable */
 @media (max-width: 39.9999rem) {
   .floating-menu__pencil-slot {
     display: none;
@@ -1107,11 +1108,17 @@ body.app--cross-mode .brand-header__pencil-btn {
     overflow: hidden;
     visibility: hidden;
   }
+  .floating-menu__add-btn {
+    width: auto;
+    min-width: var(--add-row-height);
+    padding: 0 var(--space-md);
+    gap: var(--space-sm);
+  }
   .floating-menu__add-label {
     display: inline;
-    font-size: var(--text-sm);
+    font-size: 16px;
     font-weight: var(--font-medium);
-    color: var(--color-text-primary);
+    color: #fff;
     white-space: nowrap;
   }
 }
@@ -1568,7 +1575,7 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
 
 .chip {
   padding: var(--space-xs) var(--space-sm);
-  font-size: var(--text-xs);
+  font-size: 0.875rem; /* 14px */
   font-weight: var(--font-medium);
   background: var(--bg-hover);
   border-radius: var(--radius-sm);
@@ -1711,7 +1718,7 @@ html[data-theme="light"] .chip[data-category="errands"].chip--active {
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
-  font-size: var(--text-xs);
+  font-size: 0.875rem; /* 14px */
   font-weight: var(--font-medium);
   background: transparent;
   border-radius: var(--radius-sm);
@@ -1756,7 +1763,7 @@ html[data-theme="light"] .chip[data-category="errands"].chip--active {
 }
 .status-dropdown__option {
   padding: var(--space-xs) var(--space-sm);
-  font-size: var(--text-xs);
+  font-size: 0.875rem; /* 14px */
   font-weight: var(--font-medium);
   background: transparent;
   border: none;
