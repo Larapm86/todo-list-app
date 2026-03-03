@@ -1055,15 +1055,35 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   display: none;
 }
 
-/* Filter row: category (left) + status dropdown (right) */
+/* Slot: no space when no todos; only take space when filters are visible */
+.filter-row-slot {
+  min-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  transition: min-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), margin 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-row-slot.filter-row-slot--visible {
+  min-height: 2.5rem;
+  margin-top: var(--space-lg);
+  margin-bottom: 0;
+}
+
+/* Filter row: category (left) + status dropdown (right); shown only when there are todos */
 .filter-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
   flex-wrap: wrap;
-  margin-top: var(--space-lg);
-  margin-bottom: var(--space-xs);
+  opacity: 1;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-row.filter-row--hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Filter bar (category) */
@@ -1181,37 +1201,18 @@ html:not([data-theme="light"]) .brand-header__icon--pencil .pencil-wood rect {
   box-shadow: 0 0 0 2px rgba(91, 33, 182, 0.35);
 }
 
-/* Filter button active – one color per category */
-.filter-btn[data-category=""].filter-btn--active {
+/* Filter button active – same style as "Everything" for any selected filter */
+.filter-btn.filter-btn--active {
   border-color: var(--border-default);
   color: var(--color-text-primary);
   background: var(--bg-hover);
 }
-.filter-btn[data-category="general"].filter-btn--active {
-  border-color: var(--category-general);
-  color: var(--category-general-text);
-  background: var(--category-general);
-}
-.filter-btn[data-category="work"].filter-btn--active {
-  border-color: var(--category-work);
-  color: var(--category-work-text);
-  background: var(--category-work);
-}
-.filter-btn[data-category="personal"].filter-btn--active {
-  border-color: var(--category-personal);
-  color: var(--category-personal-text);
-  background: var(--category-personal);
-}
-.filter-btn[data-category="errands"].filter-btn--active {
-  border-color: var(--category-errands);
-  color: var(--category-errands-text);
-  background: var(--category-errands);
-}
 
-/* List section – anchor at top so list grows downward, content centered */
+/* List section – anchor at top so list grows downward, content centered; sits close under filters */
 .list-section {
   min-height: 5rem;
   padding: 0;
+  margin-top: calc(-1 * var(--space-sm));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1553,8 +1554,9 @@ button {
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
+/* Only use system preference when user hasn't set an explicit theme */
 @media (prefers-color-scheme: light) {
-  :root {
+  html:not([data-theme]) {
     color: #213547;
     background-color: #f8f9fa;
     --color-text-muted: rgba(0, 0, 0, 0.45);
@@ -1563,120 +1565,137 @@ button {
     --tag-bg: #e2e6ed;
     --tag-text: #4a5568;
   }
-  a:hover {
+  html:not([data-theme]) a:hover {
     color: #6d28d9;
   }
-  button {
+  html:not([data-theme]) button {
     background-color: #f9f9f9;
   }
-  .brand-header__icon--pencil .pencil-lead {
+  html:not([data-theme]) .brand-header__icon--pencil .pencil-lead {
     fill: #1a1a1a;
   }
-  .add-form__input {
+  html:not([data-theme]) .add-form__input {
     background-color: #f5f5f5;
   }
-  .add-form__input:hover {
+  html:not([data-theme]) .add-form__input:hover {
     border-color: rgba(0, 0, 0, 0.18);
   }
-  .add-form__input::placeholder {
+  html:not([data-theme]) .add-form__input::placeholder {
     color: rgba(0, 0, 0, 0.45);
   }
-  .auth-modal__content {
+  html:not([data-theme]) .auth-modal__content {
     background: #f5f5f5;
     border-color: rgba(0, 0, 0, 0.08);
   }
-  .auth-modal__content .auth-modal__close:focus-visible {
+  html:not([data-theme]) .auth-modal__content .auth-modal__close:focus-visible {
     box-shadow: none;
   }
-  .auth-modal__content .auth-form__switch:focus-visible,
-  .auth-modal__content .auth-input:focus-visible,
-  .auth-modal__content .auth-submit:focus-visible,
-  .auth-modal__content .auth-password-toggle:focus-visible,
-  .add-form__submit:focus-visible,
-  .add-form__input:focus-visible,
-  .todo-item__checkbox:focus-visible {
+  html:not([data-theme]) .auth-modal__content .auth-form__switch:focus-visible,
+  html:not([data-theme]) .auth-modal__content .auth-input:focus-visible,
+  html:not([data-theme]) .auth-modal__content .auth-submit:focus-visible,
+  html:not([data-theme]) .auth-modal__content .auth-password-toggle:focus-visible,
+  html:not([data-theme]) .add-form__submit:focus-visible,
+  html:not([data-theme]) .add-form__input:focus-visible,
+  html:not([data-theme]) .todo-item__checkbox:focus-visible {
     box-shadow: var(--focus-ring-light);
   }
-  .app-bar__signup:focus-visible {
+  html:not([data-theme]) .app-bar__signup:focus-visible {
     box-shadow: 0 0 0 1px rgba(120, 120, 120, 0.4);
   }
-  .auth-input {
+  html:not([data-theme]) .auth-input {
     background-color: #f5f5f5;
   }
-  .auth-input:hover {
+  html:not([data-theme]) .auth-input:hover {
     border-color: rgba(0, 0, 0, 0.18);
   }
-  .auth-modal__content .auth-input:focus {
+  html:not([data-theme]) .auth-modal__content .auth-input:focus {
     border-color: rgba(0, 0, 0, 0.25);
   }
-  #auth-signin-form .auth-submit,
-  #auth-signup-form .auth-submit {
+  html:not([data-theme]) #auth-signin-form .auth-submit,
+  html:not([data-theme]) #auth-signup-form .auth-submit {
     background: var(--accent);
     color: #fff;
   }
-  #auth-signin-form .auth-submit:hover,
-  #auth-signup-form .auth-submit:hover {
+  html:not([data-theme]) #auth-signin-form .auth-submit:hover,
+  html:not([data-theme]) #auth-signup-form .auth-submit:hover {
     background: var(--accent-hover);
   }
-  .auth-submit:hover {
+  html:not([data-theme]) .auth-submit:hover {
     opacity: 0.92;
   }
-  .add-form__submit {
+  html:not([data-theme]) .add-form__submit {
     background: var(--accent);
   }
-  .add-form__submit:hover:not(:disabled) {
+  html:not([data-theme]) .add-form__submit:hover:not(:disabled) {
     background: var(--accent-hover);
   }
-  .add-form__input:focus {
+  html:not([data-theme]) .add-form__input:focus {
     border-color: rgba(0, 0, 0, 0.25);
   }
-  .app-bar__initial {
+  html:not([data-theme]) .app-bar__initial {
     background: rgba(0, 0, 0, 0.06);
     color: var(--color-text-muted);
     border-color: rgba(0, 0, 0, 0.08);
   }
-  .app-bar__signup {
+  html:not([data-theme]) .app-bar__signup {
     background: transparent;
     border-color: rgba(0, 0, 0, 0.1);
     color: inherit;
   }
-  .app-bar__signup:hover {
+  html:not([data-theme]) .app-bar__signup:hover {
     background: rgba(0, 0, 0, 0.04);
     border-color: rgba(0, 0, 0, 0.15);
   }
-  .app-bar__signup:active {
+  html:not([data-theme]) .app-bar__signup:active {
     background: rgba(0, 0, 0, 0.06);
   }
-  .toast__undo {
+  html:not([data-theme]) .toast__undo {
     background: var(--accent);
     color: #fff;
   }
-  .toast__undo:hover {
+  html:not([data-theme]) .toast__undo:hover {
     background: var(--accent-hover);
     opacity: 1;
   }
-  .add-block {
+  html:not([data-theme]) .add-block {
     background: rgba(0, 0, 0, 0.04);
     border-color: rgba(0, 0, 0, 0.08);
   }
-  .todo-item {
+  html:not([data-theme]) .todo-item {
     background-color: var(--card-bg);
     border-color: var(--card-border);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
-  .todo-item:hover,
-  .todo-item:focus-within {
+  html:not([data-theme]) .todo-item:hover,
+  html:not([data-theme]) .todo-item:focus-within {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-color: rgba(0, 0, 0, 0.14);
   }
-  .todo-item--general { background-color: color-mix(in srgb, var(--card-bg) 95%, #64748b); }
-  .todo-item--work { background-color: color-mix(in srgb, var(--card-bg) 92%, #2383e2); }
-  .todo-item--personal { background-color: color-mix(in srgb, var(--card-bg) 92%, #22c55e); }
-  .todo-item--errands { background-color: color-mix(in srgb, var(--card-bg) 92%, #f59e0b); }
-  .todo-item__text {
+  html:not([data-theme]) .todo-item--general { background-color: color-mix(in srgb, var(--card-bg) 95%, #64748b); }
+  html:not([data-theme]) .todo-item--work { background-color: color-mix(in srgb, var(--card-bg) 92%, #2383e2); }
+  html:not([data-theme]) .todo-item--personal { background-color: color-mix(in srgb, var(--card-bg) 92%, #22c55e); }
+  html:not([data-theme]) .todo-item--errands { background-color: color-mix(in srgb, var(--card-bg) 92%, #f59e0b); }
+  html:not([data-theme]) .todo-item__text {
     color: #1a1a1a;
   }
-  .todo-item__checkbox:focus-visible {
+  html:not([data-theme]) .todo-item__checkbox:focus-visible {
     box-shadow: 0 0 0 1px rgba(120, 120, 120, 0.35);
   }
+}
+
+/* When user explicitly chose dark, override prefers-color-scheme: light so dark theme always wins */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.9);
+  background-color: #191919;
+  --bg-default: #191919;
+  --bg-elevated: #252525;
+  --bg-hover: rgba(255, 255, 255, 0.04);
+  --border-default: rgba(255, 255, 255, 0.06);
+  --color-text-muted: #9b9a97;
+  --color-text-primary: rgba(255, 255, 255, 0.9);
+  --card-bg: var(--bg-elevated);
+  --card-border: var(--border-default);
+  --tag-bg: rgba(255, 255, 255, 0.08);
+  --tag-text: var(--color-text-muted);
 }

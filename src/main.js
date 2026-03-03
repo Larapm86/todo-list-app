@@ -31,6 +31,7 @@ let authTooltipHideTimeout = null
 let authTooltipDismissListener = null
 const todoErrorEl = document.getElementById('todo-error')
 const todoEmptyEl = document.getElementById('todo-empty')
+const filterRowEl = document.getElementById('filter-row')
 const todoAddBtn = document.getElementById('todo-add-btn')
 const todoAddBtnIcon = todoAddBtn?.querySelector('.add-form__submit-icon')
 const todoAddBtnSpinner = todoAddBtn?.querySelector('.add-form__spinner')
@@ -469,6 +470,12 @@ function renderTodos(justAdded = false, addedId = null) {
   const hasMatch = toShow.length > 0
   if (todoEmptyEl) todoEmptyEl.hidden = hasTodos
   if (todoNoMatchEl) todoNoMatchEl.hidden = !hasTodos || hasMatch
+  if (filterRowEl) {
+    filterRowEl.classList.toggle('filter-row--hidden', !hasTodos)
+    const slot = filterRowEl.closest('.filter-row-slot')
+    if (slot) slot.classList.toggle('filter-row-slot--visible', hasTodos)
+  }
+  if (!hasTodos) closeStatusDropdown()
   listEl.innerHTML = ''
   for (const todo of toShow) {
     const cat = todo.category || 'general'
