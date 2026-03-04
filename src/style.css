@@ -6,6 +6,10 @@
   color-scheme: dark;
   color: rgba(255, 255, 255, 0.9);
   background-color: #191919;
+  /* Dotted notebook background (dark theme) */
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 1rem 1rem;
+  background-attachment: local;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -92,6 +96,10 @@ html[data-theme="light"] {
   color-scheme: light;
   color: #213547;
   background-color: #f8f9fa;
+  /* Dotted notebook background (light theme) */
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 1rem 1rem;
+  background-attachment: local;
   --color-text-muted: rgba(0, 0, 0, 0.45);
   --card-bg: #ffffff;
   --card-border: rgba(0, 0, 0, 0.1);
