@@ -239,7 +239,10 @@
           <div id="todo-empty" class="empty-state" hidden>
             <span class="empty-state__text">No todos on your list. Add one above, or tap the party button to boogie.</span>
             <button type="button" class="empty-state__party" aria-label="Celebrate! You have no pending tasks" title="Celebrate">
-              <span class="material-symbols-outlined empty-state__party-icon" aria-hidden="true">celebration</span>
+              <span class="empty-state__party-icon" aria-hidden="true">
+                <img class="empty-state__party-icon-img empty-state__party-icon-img--dark" src="/assets/celebration_darktheme.svg" alt="" width="20" height="20" />
+                <img class="empty-state__party-icon-img empty-state__party-icon-img--light" src="/assets/celebration_lighttheme.svg" alt="" width="20" height="20" />
+              </span>
             </button>
           </div>
           <div id="todo-no-match" class="empty-state" hidden>No tasks match your filter.</div>

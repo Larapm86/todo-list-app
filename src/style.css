@@ -1683,7 +1683,6 @@ html[data-theme="light"] .chip[data-category="errands"].chip--active {
   margin-top: var(--space-lg);
   margin-bottom: 0;
   isolation: isolate;
-  background: var(--bg-default);
   padding-bottom: var(--space-sm);
 }
 
@@ -2061,18 +2060,37 @@ html[data-theme="light"] .filter-btn:focus-visible {
   touch-action: manipulation;
 }
 
-/* Material Symbols Outlined – celebration icon */
-.material-symbols-outlined.empty-state__party-icon {
-  font-family: 'Material Symbols Outlined';
-  font-weight: 400;
-  font-style: normal;
-  font-size: 1.25rem;
-  line-height: 1;
-  letter-spacing: normal;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  display: inline-block;
-  color: currentColor;
+/* Celebration icon (SVG, theme-aware) */
+.empty-state__party-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  position: relative;
+}
+
+.empty-state__party-icon-img {
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+}
+
+.empty-state__party-icon-img--dark {
+  display: block;
+}
+
+.empty-state__party-icon-img--light {
+  display: none;
+}
+
+html[data-theme="light"] .empty-state__party-icon-img--dark {
+  display: none;
+}
+
+html[data-theme="light"] .empty-state__party-icon-img--light {
+  display: block;
 }
 
 .empty-state__party:hover {
