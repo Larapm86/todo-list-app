@@ -380,8 +380,23 @@ export async function addTodo(taskText, category = 'work') {
     if (!user) {
       const ensureTimeout = (ms) =>
         new Promise((_, reject) => setTimeout(() => reject(new Error('Sign-in timed out. Try again.')), ms))
-      await Promise.race([ensureSession(), ensureTimeout(10000)])
-      user = state.currentUser
+      const ensurePromise = ensureSession()
+      try {
+        await Promise.race([ensurePromise, ensureTimeout(10000)])
+      } catch (e) {
+        // Timeout may fire while ensureSession() is still running; wait for it and use session if it succeeds.
+        if (e?.message === 'Sign-in timed out. Try again.') {
+          await ensurePromise
+          if (state.currentUser) {
+            user = state.currentUser
+          } else {
+            throw e
+          }
+        } else {
+          throw e
+        }
+      }
+      if (!user) user = state.currentUser
     }
     const isAnonymous = !user || user.is_anonymous
     if (isAnonymous) {
