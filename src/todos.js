@@ -18,6 +18,8 @@ import { closeStatusDropdown } from './dropdown.js'
 
 let dragAndDropInitialized = false
 let dragState = null
+// Content column name: 'text' (default schema) or 'todo_text'; set when load/insert detects the DB schema.
+let contentColumn = 'text'
 
 function setupDragAndDropOnList() {
   if (dragAndDropInitialized || !listEl) return
@@ -103,12 +105,18 @@ export async function ensureSession() {
   } = await supabase.auth.getSession()
   if (session?.user) {
     state.setCurrentUser(session.user)
+    if (typeof console.debug === 'function') {
+      console.debug('ensureSession: using existing session', { userId: session.user.id, isAnonymous: session.user.is_anonymous })
+    }
     return
   }
   // Try to recover session from refresh token (e.g. after page refresh before storage is read)
   const { data: refreshData } = await supabase.auth.refreshSession()
   if (refreshData?.session?.user) {
     state.setCurrentUser(refreshData.session.user)
+    if (typeof console.debug === 'function') {
+      console.debug('ensureSession: recovered session via refresh', { userId: refreshData.session.user.id, isAnonymous: refreshData.session.user.is_anonymous })
+    }
     return
   }
   const { data, error } = await supabase.auth.signInAnonymously()
@@ -117,6 +125,9 @@ export async function ensureSession() {
     throw error
   }
   state.setCurrentUser(data.user)
+  if (typeof console.debug === 'function') {
+    console.debug('ensureSession: created new anonymous user', { userId: data.user.id })
+  }
 }
 
 export async function loadTodos() {
@@ -136,7 +147,7 @@ export async function loadTodos() {
   const isAnonymous = state.currentUser.is_anonymous === true
   const localTodos = state.todos.filter((t) => isLocalTodoId(t.id))
 
-  // When user just signed in (no longer anonymous), migrate their local-only todos to the DB so they aren't lost
+  // When user just signed in (no longer anonymous), migrate local-only todos to the DB (insert only; we do not replace existing DB todos for this user).
   const failedMigration = []
   const insertedLocalIdToDbId = {} // track so we can exclude from merged if user deleted during migration
   if (!isAnonymous && localTodos.length > 0) {
@@ -149,7 +160,7 @@ export async function loadTodos() {
       const { data: inserted, error: insertErr } = await supabase
         .from('todos')
         .insert({
-          text: typeof todo.text === 'string' ? todo.text : '',
+          [contentColumn]: typeof todo.text === 'string' ? todo.text : '',
           completed: Boolean(todo.completed),
           user_id: state.currentUser.id,
           category: typeof todo.category === 'string' ? todo.category : 'work',
@@ -167,15 +178,50 @@ export async function loadTodos() {
   }
   if (state.currentUser?.id !== loadingForUserId) return
 
-  const { data, error } = await supabase
+  // Prefer position column when present so drag-drop order is restored; fall back to created_at if position doesn't exist.
+  // Support both content column names: 'text' (default) and 'todo_text'.
+  let data, error
+  const selectCols = (col) => `id, ${col}, completed, created_at, category`
+  const withPosition = await supabase
     .from('todos')
-    .select('id, text, completed, created_at, category, position')
+    .select(`${selectCols(contentColumn)}, position`)
     .eq('user_id', state.currentUser.id)
     .order('position', { ascending: true })
     .order('created_at', { ascending: true })
+  if (withPosition.error && String(withPosition.error.message || '').includes('position')) {
+    const fallback = await supabase
+      .from('todos')
+      .select(selectCols(contentColumn))
+      .eq('user_id', state.currentUser.id)
+      .order('created_at', { ascending: true })
+    data = fallback.data
+    error = fallback.error
+  } else {
+    data = withPosition.data
+    error = withPosition.error
+  }
+  // If content column might be wrong (schema cache / column not found), retry with the other name.
+  const msg = String(error?.message || '')
+  if (error && (msg.includes('column') || msg.includes('schema')) && (msg.includes('text') || msg.includes('todo_text'))) {
+    const other = contentColumn === 'text' ? 'todo_text' : 'text'
+    contentColumn = other
+    const retry = await supabase
+      .from('todos')
+      .select(selectCols(contentColumn))
+      .eq('user_id', state.currentUser.id)
+      .order('created_at', { ascending: true })
+    if (!retry.error) {
+      data = retry.data
+      error = null
+    }
+  }
   if (error) {
-    console.error('Failed to load todos:', error)
+    console.error('Failed to load todos:', { userId: state.currentUser?.id, error })
     return
+  }
+  const count = (data ?? []).length
+  if (typeof console.debug === 'function') {
+    console.debug('Load todos:', { userId: state.currentUser.id, count, isAnonymous: state.currentUser.is_anonymous })
   }
   let fromDb = (data ?? []).map((row, index) => ({
     id: row.id,
@@ -299,7 +345,10 @@ export async function reorderTodos(draggedId, dropTargetId) {
       .update({ position: u.position })
       .eq('id', u.id)
       .then(({ error }) => {
-        if (error) console.error('Failed to persist order:', error)
+        // Ignore schema errors (e.g. position column doesn't exist yet)
+        if (error && !String(error.message || '').includes('position')) {
+          console.error('Failed to persist order:', error)
+        }
       })
   }
 }
@@ -318,76 +367,101 @@ export async function addTodo(taskText, category = 'work') {
   const cat = typeof category === 'string' && category ? category : 'work'
   setAddLoading(true)
   clearTodoError()
-  await supabase.auth.refreshSession()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const user = session?.user
-  const isAnonymous = !user || user.is_anonymous
-  if (isAnonymous) {
-    setAddLoading(false)
-    // Only set currentUser when we have a real session user (anonymous); don't set a synthetic ID when offline (user undefined)
-    if (user) state.setCurrentUser(user)
-    const localId = 'local-' + Date.now()
-    const maxPos = state.todos.length
-      ? Math.max(...state.todos.map((t) => (typeof t.position === 'number' ? t.position : 0)))
-      : -1
-    const newTodo = {
-      id: localId,
-      text: trimmed,
-      completed: false,
-      created_at: new Date().toISOString(),
-      category: cat,
-      position: maxPos + 1,
+  try {
+    // Use in-memory user; if missing, try getSession() first (fast) so we don't treat a logged-in user as anonymous, then ensureSession() if needed.
+    let user = state.currentUser
+    if (!user && supabase) {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        state.setCurrentUser(session.user)
+        user = session.user
+      }
     }
-    state.setTodos([...state.todos, newTodo])
-    renderTodos(true, newTodo.id)
-    showAddSuccessCheck()
-    setTimeout(showAuthTooltip, AUTH_TOOLTIP_DELAY_MS)
-    return
-  }
-  const { data: inserted, error } = await supabase
-    .from('todos')
-    .insert({
-      text: trimmed,
-      completed: false,
-      user_id: user.id,
-      category: cat,
-    })
-    .select('id, text, completed, created_at, category, position')
-    .single()
-  setAddLoading(false)
-  if (error) {
-    console.error('Failed to add todo:', error)
-    showTodoError(error.message)
-    return
-  }
-  clearTodoError()
-  state.setCurrentUser(user)
-  if (inserted) {
+    if (!user) {
+      const ensureTimeout = (ms) =>
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Sign-in timed out. Try again.')), ms))
+      await Promise.race([ensureSession(), ensureTimeout(10000)])
+      user = state.currentUser
+    }
+    const isAnonymous = !user || user.is_anonymous
+    if (isAnonymous) {
+      // Anonymous todos stay local (in-memory only); they are not written to Supabase.
+      if (user) state.setCurrentUser(user)
+      const localId = 'local-' + Date.now()
+      const maxPos = state.todos.length
+        ? Math.max(...state.todos.map((t) => (typeof t.position === 'number' ? t.position : 0)))
+        : -1
+      const newTodo = {
+        id: localId,
+        text: trimmed,
+        completed: false,
+        created_at: new Date().toISOString(),
+        category: cat,
+        position: maxPos + 1,
+      }
+      state.setTodos([...state.todos, newTodo])
+      renderTodos(true, newTodo.id)
+      showAddSuccessCheck()
+      setTimeout(showAuthTooltip, AUTH_TOOLTIP_DELAY_MS)
+      return
+    }
     const nextPosition =
       state.todos.length > 0
         ? Math.max(...state.todos.map((t) => (typeof t.position === 'number' ? t.position : 0))) + 1
         : 0
-    const newTodo = {
-      id: inserted.id,
-      text:
-        typeof inserted.text === 'string'
-          ? inserted.text
-          : typeof inserted.todo_text === 'string'
-            ? inserted.todo_text
-            : trimmed,
-      completed: Boolean(inserted.completed),
-      created_at: inserted.created_at,
-      category: typeof inserted.category === 'string' ? inserted.category : 'work',
-      position: typeof inserted.position === 'number' ? inserted.position : nextPosition,
+    // Omit position from insert so app works if the position migration hasn't been run. Use contentColumn for schema compatibility.
+    let insertPayload = { [contentColumn]: trimmed, completed: false, user_id: user.id, category: cat }
+    let { data: inserted, error } = await supabase
+      .from('todos')
+      .insert(insertPayload)
+      .select(`id, ${contentColumn}, completed, created_at, category`)
+      .single()
+    if (error && (String(error.message || '').includes('column') || String(error.message || '').includes('schema'))) {
+      const other = contentColumn === 'text' ? 'todo_text' : 'text'
+      contentColumn = other
+      insertPayload = { [contentColumn]: trimmed, completed: false, user_id: user.id, category: cat }
+      const retry = await supabase
+        .from('todos')
+        .insert(insertPayload)
+        .select(`id, ${contentColumn}, completed, created_at, category`)
+        .single()
+      if (!retry.error) {
+        inserted = retry.data
+        error = null
+      }
     }
-    state.setTodos([...state.todos, newTodo])
-    renderTodos(true, newTodo.id)
-    showAddSuccessCheck()
-  } else {
-    await loadTodos()
-    showAddSuccessCheck()
+    if (error) {
+      console.error('Failed to add todo (logged-in):', { userId: user.id, error })
+      showTodoError(error.message)
+      return
+    }
+    if (!inserted) {
+      console.warn('Add todo (logged-in): insert succeeded but no row returned', { userId: user.id })
+    }
+    clearTodoError()
+    state.setCurrentUser(user)
+    if (inserted) {
+      const content = inserted[contentColumn] ?? inserted.text ?? inserted.todo_text ?? trimmed
+      const newTodo = {
+        id: inserted.id,
+        text: typeof content === 'string' ? content : trimmed,
+        completed: Boolean(inserted.completed),
+        created_at: inserted.created_at,
+        category: typeof inserted.category === 'string' ? inserted.category : 'work',
+        position: typeof inserted.position === 'number' ? inserted.position : nextPosition,
+      }
+      state.setTodos([...state.todos, newTodo])
+      renderTodos(true, newTodo.id)
+      showAddSuccessCheck()
+    } else {
+      await loadTodos()
+      showAddSuccessCheck()
+    }
+  } catch (e) {
+    console.error('Add todo error:', e)
+    showTodoError(e?.message ?? 'Could not add todo.')
+  } finally {
+    setAddLoading(false)
   }
 }
 

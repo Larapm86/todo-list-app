@@ -129,7 +129,7 @@ todoChipsAdd?.forEach((btn) => {
   })
 })
 
-form?.addEventListener('submit', (e) => {
+form?.addEventListener('submit', async (e) => {
   e.preventDefault()
   clearTodoError()
   const value = input.value
@@ -138,7 +138,7 @@ form?.addEventListener('submit', (e) => {
   updateAddFormHasValue()
   setRandomPlaceholder()
   input.focus()
-  todos.addTodo(value, category)
+  await todos.addTodo(value, category)
 })
 
 syncStatusDropdownUI()
@@ -646,19 +646,50 @@ document.querySelectorAll('.auth-password-wrap').forEach((wrap) => {
 
 auth.initAuth(todos.loadTodos)
 
+// Sign-out: only clear state/UI when signOut() succeeds (or no Supabase), so we don't show signed-out while still authenticated on server.
 authSignOut?.addEventListener('click', async () => {
-  if (!supabase) return
-  await supabase.auth.signOut()
-  await todos.ensureSession()
-  auth.updateAuthUI()
-  await todos.loadTodos()
+  let signOutOk = true
+  if (supabase) {
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.error('Sign out error:', err)
+      signOutOk = false
+    }
+  }
+  if (signOutOk || !supabase) {
+    state.setCurrentUser(null)
+    state.setTodos([])
+    auth.updateAuthUI()
+    todos.renderTodos()
+  }
 })
 
+// Handle auth changes after initial load (Supabase auth-js v2 does not fire onAuthStateChange for initial session).
 if (supabase) {
-  supabase.auth.onAuthStateChange((_event, session) => {
-    state.setCurrentUser(session?.user ?? null)
-    auth.updateAuthUI()
-    void todos.loadTodos()
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    try {
+      state.setCurrentUser(session?.user ?? null)
+      auth.updateAuthUI()
+      // On explicit sign-out, just clear list and show sign-in; do not create anonymous session (avoids hang/failure).
+      if (event === 'SIGNED_OUT') {
+        state.setTodos([])
+        todos.renderTodos()
+        return
+      }
+      // Only ensure an anonymous session when we have no user and this is not a sign-out (e.g. initial load, token expired).
+      if (!session?.user && event !== 'SIGNED_OUT') {
+        await todos.ensureSession()
+        auth.updateAuthUI()
+      }
+      await todos.loadTodos()
+    } catch (err) {
+      console.error('Auth state change error:', err)
+      state.setCurrentUser(null)
+      state.setTodos([])
+      auth.updateAuthUI()
+      todos.renderTodos()
+    }
   })
 }
 
@@ -677,6 +708,7 @@ if (supabase) {
         }
       }, 100)
     }
+    // Initial session + load: onAuthStateChange does not fire for initial state in auth-js v2, so we run once on load.
     if (supabase) {
       await todos.ensureSession()
       auth.updateAuthUI()
@@ -686,3 +718,32 @@ if (supabase) {
     console.error('App init failed:', err)
   }
 })()
+
+// Dev helper: from browser console you can run window.__todoApp.signOut(), window.__todoApp.addTodo('text'), window.__todoApp.loadTodos()
+if (typeof window !== 'undefined') {
+  window.__todoApp = {
+    async signOut() {
+      let ok = true
+      if (supabase) {
+        try {
+          await supabase.auth.signOut()
+        } catch (e) {
+          console.error('Sign out error:', e)
+          ok = false
+        }
+      }
+      if (ok || !supabase) {
+        state.setCurrentUser(null)
+        state.setTodos([])
+        auth.updateAuthUI()
+        todos.renderTodos()
+      }
+    },
+    addTodo(text = 'Test todo') {
+      return todos.addTodo(text, state.selectedCategoryForNew || 'work')
+    },
+    loadTodos() {
+      return todos.loadTodos()
+    },
+  }
+}
