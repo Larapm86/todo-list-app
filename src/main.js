@@ -34,6 +34,8 @@ import {
   crossModeToggleBtn,
   appEl,
   cursorPencilEl,
+  pencilTrailEl,
+  pencilTrailPathEl,
   brandHeaderEl,
   addBlockEl,
   floatingMenuEl,
@@ -259,7 +261,47 @@ listEl?.addEventListener('click', (e) => {
 emptyStatePartyBtn?.addEventListener('click', () => runEmptyStateCelebration())
 
 // ---- Cross-off mode (pick up / return pencil) ----
+const TRAIL_TTL_MS = 2000
+const TRAIL_THROTTLE_MS = 16
 let cursorPencilMove = null
+let trailPoints = []
+let lastTrailTime = 0
+let trailResizeCleanup = null
+let trailCullInterval = null
+
+function setTrailViewBox() {
+  if (!pencilTrailEl) return
+  const svg = pencilTrailEl.querySelector('.pencil-trail__svg')
+  if (svg) {
+    const w = window.innerWidth
+    const h = window.innerHeight
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`)
+    svg.setAttribute('width', w)
+    svg.setAttribute('height', h)
+  }
+}
+
+function updateTrailPath() {
+  if (!pencilTrailPathEl) return
+  const now = Date.now()
+  const cutoff = now - TRAIL_TTL_MS
+  while (trailPoints.length > 0 && trailPoints[0].t < cutoff) {
+    trailPoints.shift()
+  }
+  if (trailPoints.length < 2) {
+    pencilTrailPathEl.setAttribute('d', '')
+    return
+  }
+  const d = trailPoints.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ')
+  pencilTrailPathEl.setAttribute('d', d)
+}
+
+function clearPencilTrail(hideOverlay = true) {
+  trailPoints = []
+  if (pencilTrailPathEl) pencilTrailPathEl.setAttribute('d', '')
+  if (hideOverlay && pencilTrailEl) pencilTrailEl.setAttribute('hidden', '')
+}
+
 function updateCrossModeUI() {
   const on = state.crossMode
   crossModeToggleBtn?.setAttribute('aria-pressed', on ? 'true' : 'false')
@@ -272,16 +314,42 @@ function updateCrossModeUI() {
       cursorPencilEl.appendChild(source.cloneNode(true))
       cursorPencilEl.removeAttribute('hidden')
     }
+    if (pencilTrailEl) {
+      setTrailViewBox()
+      pencilTrailEl.removeAttribute('hidden')
+    }
+    trailPoints = []
     cursorPencilMove = (e) => {
       cursorPencilEl.style.left = e.clientX + 'px'
       cursorPencilEl.style.top = e.clientY + 'px'
+      const now = Date.now()
+      if (now - lastTrailTime >= TRAIL_THROTTLE_MS) {
+        lastTrailTime = now
+        trailPoints.push({ t: now, x: e.clientX, y: e.clientY })
+        updateTrailPath()
+      }
     }
     document.addEventListener('pointermove', cursorPencilMove)
+    trailCullInterval = setInterval(updateTrailPath, 100)
+    trailResizeCleanup = () => {
+      clearPencilTrail(false)
+      setTrailViewBox()
+    }
+    window.addEventListener('resize', trailResizeCleanup)
   } else {
+    if (trailCullInterval) {
+      clearInterval(trailCullInterval)
+      trailCullInterval = null
+    }
     if (cursorPencilMove) {
       document.removeEventListener('pointermove', cursorPencilMove)
       cursorPencilMove = null
     }
+    if (trailResizeCleanup) {
+      window.removeEventListener('resize', trailResizeCleanup)
+      trailResizeCleanup = null
+    }
+    clearPencilTrail()
     cursorPencilEl?.setAttribute('hidden', '')
     cursorPencilEl && (cursorPencilEl.innerHTML = '')
   }
