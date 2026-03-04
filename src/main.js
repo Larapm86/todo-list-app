@@ -714,23 +714,19 @@ document.querySelectorAll('.auth-password-wrap').forEach((wrap) => {
 
 auth.initAuth(todos.loadTodos)
 
-// Sign-out: only clear state/UI when signOut() succeeds (or no Supabase), so we don't show signed-out while still authenticated on server.
+// Sign-out: clear state/UI when user clicks logout so the button always responds. Try to sign out on server; if it fails, we still show signed-out locally.
 authSignOut?.addEventListener('click', async () => {
-  let signOutOk = true
   if (supabase) {
     try {
       await supabase.auth.signOut()
     } catch (err) {
       console.error('Sign out error:', err)
-      signOutOk = false
     }
   }
-  if (signOutOk || !supabase) {
-    state.setCurrentUser(null)
-    state.setTodos([])
-    auth.updateAuthUI()
-    todos.renderTodos()
-  }
+  state.setCurrentUser(null)
+  state.setTodos([])
+  auth.updateAuthUI()
+  todos.renderTodos()
 })
 
 // Handle auth changes after initial load (Supabase auth-js v2 does not fire onAuthStateChange for initial session).
@@ -791,21 +787,17 @@ if (supabase) {
 if (typeof window !== 'undefined') {
   window.__todoApp = {
     async signOut() {
-      let ok = true
       if (supabase) {
         try {
           await supabase.auth.signOut()
         } catch (e) {
           console.error('Sign out error:', e)
-          ok = false
         }
       }
-      if (ok || !supabase) {
-        state.setCurrentUser(null)
-        state.setTodos([])
-        auth.updateAuthUI()
-        todos.renderTodos()
-      }
+      state.setCurrentUser(null)
+      state.setTodos([])
+      auth.updateAuthUI()
+      todos.renderTodos()
     },
     addTodo(text = 'Test todo') {
       return todos.addTodo(text, state.selectedCategoryForNew || 'work')

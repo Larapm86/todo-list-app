@@ -368,8 +368,8 @@ export async function addTodo(taskText, category = 'work') {
   setAddLoading(true)
   clearTodoError()
   try {
-    // Use in-memory user; if missing, try getSession() first (fast) so we don't treat a logged-in user as anonymous, then ensureSession() if needed.
-    let user = state.currentUser
+    // Use in-memory user; if we already have a non-anonymous user, use it so we never replace them with anonymous. Otherwise getSession() then ensureSession() if needed.
+    let user = state.currentUser && !state.currentUser.is_anonymous ? state.currentUser : null
     if (!user && supabase) {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
